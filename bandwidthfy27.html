@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bandwidth &amp; Workload, Internal Enablement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7F9; --panel:#FFFFFF; --ink:#151B24; --ink-2:#3C4654; --muted:#697586;
+    --line:#E4E7EC; --line-2:#EEF0F3;
+    --accent:#3538CD; --accent-soft:#EEF0FF;
+    --heavy:#A6371A; --medium:#CC7A1F; --light:#E0B84C; --minimal:#9AA3AF;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 24px rgba(16,24,40,.05);
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    font-feature-settings:"tnum" on;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1060px;margin:0 auto;padding:40px 28px 72px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1,h2,h3,h4{font-family:"Space Grotesk",sans-serif;letter-spacing:-.02em;margin:0}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* Masthead */
+  .eyebrow{font:600 12px/1 "Space Grotesk";letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .masthead{padding-bottom:8px}
+  h1{font-size:clamp(36px,6vw,58px);font-weight:700;margin:14px 0 0;line-height:1}
+  .lede{font-size:16px;color:var(--ink-2);line-height:1.6;max-width:74ch;margin:18px 0 0}
+  .lede b{font-weight:600;color:var(--ink)}
+
+  /* Overview bits */
+  .ovlabel{font:600 11px/1 "Space Grotesk";letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  .glance{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:34px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+  .stat .num{font-family:"Space Grotesk";font-weight:700;font-size:28px;letter-spacing:-.02em;line-height:1}
+  .stat .lbl{font-size:12.5px;color:var(--muted);margin-top:9px;line-height:1.35}
+  .guide{display:grid;grid-template-columns:1fr 1fr;gap:12px 26px;margin-top:4px}
+  .guide div{font-size:14px;color:var(--ink-2);line-height:1.5}
+  .guide b{font-family:"Space Grotesk";font-weight:600;color:var(--ink);font-size:13.5px;display:block;margin-bottom:2px}
+  .ramp{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .rampitem{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2);background:#FBFBFC;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  .rampdot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+  .rampitem b{font-family:"Space Grotesk";font-weight:600;color:var(--ink)}
+
+  /* Primary tabs */
+  .tabbar{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:26px 0 30px;flex-wrap:wrap}
+  .tab{appearance:none;border:none;background:none;font-family:"Space Grotesk";font-weight:600;font-size:15.5px;color:var(--muted);padding:12px 18px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .tab:hover{color:var(--ink-2)}
+  .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+  .panel{display:none;animation:fade .25s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .panel-head{font-size:15px;color:var(--muted);margin:0 0 22px;max-width:80ch;line-height:1.5}
+
+  /* Sub tabs (segmented, secondary) */
+  .subtabs{display:inline-flex;gap:4px;background:#EDEFF3;border:1px solid var(--line);border-radius:11px;padding:4px;margin:2px 0 24px;flex-wrap:wrap}
+  .subtab{appearance:none;border:none;background:transparent;font-family:"Space Grotesk";font-weight:600;font-size:13px;color:var(--muted);padding:8px 15px;border-radius:8px;cursor:pointer;transition:all .15s}
+  .subtab[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.07)}
+  .subtab:hover:not([aria-selected="true"]){color:var(--ink-2)}
+  .subtab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .subpanel{display:none;animation:fade .25s ease}
+  .subpanel.active{display:block}
+
+  /* Intro card */
+  .intro{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;margin:0 0 26px;box-shadow:var(--shadow)}
+  .intro p{margin:0 0 14px;font-size:15px;color:var(--ink-2);line-height:1.6;max-width:82ch}
+  .intro p:last-child{margin-bottom:0}
+  .intro p.about{font-size:12.5px;color:var(--muted);line-height:1.55;border-left:2px solid var(--line);padding-left:14px;max-width:86ch}
+
+  /* Ledger */
+  .ledger{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+  .lhead,.row{display:grid;grid-template-columns:1.75fr 1.15fr 62px;gap:20px;align-items:center;padding:14px 22px}
+  .lhead{padding-top:13px;padding-bottom:13px;background:#FBFBFC;border-bottom:1px solid var(--line)}
+  .lhead .hl{font:600 11px/1 "Space Grotesk";letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .lhead .months{display:flex;gap:3px}
+  .lhead .months span{flex:1;text-align:center;font:600 9.5px/1.1 "Inter";color:var(--muted)}
+  .row{border-top:1px solid var(--line-2)}
+  .row .name{font-weight:600;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .row .scope{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+  .row .timing{font-size:12px;color:var(--ink-2);margin-top:5px}
+  .row .timing b{font-family:"Space Grotesk";font-weight:600;color:var(--muted);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;margin-right:6px}
+  .chip{font:600 10px/1 "Space Grotesk";letter-spacing:.05em;text-transform:uppercase;padding:4px 6px;border-radius:5px;color:#fff;white-space:nowrap}
+  .c-heavy{background:var(--heavy)} .c-medium{background:var(--medium)} .c-light{background:var(--light);color:#5a4611} .c-minimal{background:var(--minimal)}
+  .tag{font:500 10px/1 "Inter";color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:3px 5px}
+  .ilabel{font:600 10px/1 "Inter";color:#4338ca;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:3px 7px;margin-left:2px;white-space:nowrap}
+  .ilabel-alt{color:#c2410c;background:#fff7ed;border-color:#fed7aa}
+  .tstrip{display:flex;gap:3px}
+  .tcell{flex:1;height:26px;border-radius:3px;background:#EDEFF2}
+  .hrs{text-align:right;font-family:"Space Grotesk";font-weight:600;font-size:16px;letter-spacing:-.01em}
+  .hrs small{display:block;font:500 10px/1 "Inter";color:var(--muted);margin-top:3px}
+  .row.total{background:#FBFBFC;border-top:1.5px solid var(--line)}
+  .row.total .name{font-family:"Space Grotesk";font-weight:700}
+  .ext{width:11px;height:11px;vertical-align:-1px;opacity:.5}
+  .keys{display:flex;flex-wrap:wrap;gap:12px 26px;margin:0 0 16px;font-size:13px;color:var(--ink-2);align-items:center}
+  .keygroup{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.4}
+  .keygroup .kt{font:600 10.5px/1 "Space Grotesk";letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--line-2);padding:4px 7px;border-radius:5px}
+  .scaledemo{display:inline-block;width:64px;height:12px;border-radius:3px;background:linear-gradient(90deg,rgba(105,116,134,.20),rgba(105,116,134,.95));vertical-align:middle}
+  .kmini{font-size:11px;color:var(--muted)}
+
+  /* Bandwidth cards */
+  .bw-eq,.metercard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px 26px;box-shadow:var(--shadow);margin-bottom:16px}
+  .bw-eq h3,.metercard h3{font-family:"Space Grotesk";font-size:17px;font-weight:600;margin:0 0 6px}
+  .sub{font-size:13.5px;color:var(--muted);margin:0 0 6px;max-width:84ch;line-height:1.5}
+  .bw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px 28px;margin-top:14px}
+  .dctrl label{display:block;font:600 11.5px/1 "Space Grotesk";letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);margin-bottom:9px}
+  .dctrl .dval{color:var(--accent);font-variant-numeric:tabular-nums;text-transform:none}
+  .dctrl input[type=range]{width:100%;accent-color:var(--accent);height:20px;cursor:pointer}
+  .modeswitch{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin-top:8px}
+  .modeswitch button{appearance:none;border:none;background:#fff;font:600 11px/1 "Inter";color:var(--muted);padding:7px 10px;cursor:pointer}
+  .modeswitch button.on{background:var(--accent);color:#fff}
+  .champnote{font-size:12.5px;color:var(--ink-2);background:#FBFBFC;border:1px solid var(--line);border-radius:9px;padding:12px 14px;margin:18px 0 0;line-height:1.5;max-width:86ch}
+  .eqline{margin-top:20px;padding-top:20px;border-top:1px solid var(--line-2);display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px}
+  .eqline .pill{background:#FBFBFC;border:1px solid var(--line);border-radius:7px;padding:7px 11px;font-family:"Space Grotesk";font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .eqline .op{color:var(--muted);font-weight:600;font-family:"Space Grotesk"}
+  .eqline .res{background:var(--accent-soft);border-color:#DDE1FF}
+  .bw-out{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-top:20px}
+  .outbox{background:#FBFBFC;border:1px solid var(--line);border-radius:10px;padding:15px 16px}
+  .outbox .on{font:700 24px/1 "Space Grotesk";letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+  .outbox .ol{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.35}
+  .verdict{margin-top:16px;background:var(--accent-soft);border:1px solid #DDE1FF;border-radius:10px;padding:14px 18px;font-size:14.5px;color:var(--ink);line-height:1.5}
+  .verdict b{font-weight:600}
+
+  /* Meters (small monthly gauges) */
+  .mtoggle{display:flex;align-items:center;gap:12px;margin:6px 0 4px;flex-wrap:wrap}
+  .mtoggle .lab{font:600 12px/1 "Space Grotesk";letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2)}
+  .toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;font-size:14px;font-weight:500}
+  .switch{width:40px;height:22px;border-radius:22px;background:var(--accent);position:relative;transition:background .18s;flex:0 0 auto}
+  .switch.off{background:#C4CAD4}
+  .knob{position:absolute;top:2px;left:20px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .18s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .switch.off .knob{left:2px}
+  .meters{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;margin-top:18px}
+  .meter{flex:1;min-width:92px;text-align:center}
+  .mdial{width:86px;height:86px;border-radius:50%;margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center;transition:box-shadow .25s}
+  .mdial::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--ring) calc(var(--util)*360deg),#E7E9EE 0)}
+  .mdial::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--panel);box-shadow:inset 0 0 0 1px rgba(16,24,40,.05)}
+  .mdial.hot{box-shadow:0 0 0 3px rgba(180,35,24,.14),0 0 16px rgba(180,35,24,.28)}
+  .mdv{position:relative;z-index:1;font:700 15px/1 "Space Grotesk";font-variant-numeric:tabular-nums}
+  .mmon{font-size:12.5px;color:var(--ink-2);font-weight:600;margin-top:10px}
+  .mmon small{color:var(--muted);font-weight:400}
+  .mstat{font-size:11.5px;margin-top:4px;font-weight:500}
+  .spare{margin-top:22px;padding-top:20px;border-top:1px solid var(--line-2);font-size:14.5px;color:var(--ink);line-height:1.55;max-width:86ch}
+  .spare b{font-weight:600}
+
+  /* Big dials (hero + together) */
+  .kick{font:600 11px/1 "Space Grotesk";letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;margin:4px 0 2px}
+  .bigdials{display:flex;flex-wrap:wrap;gap:22px 44px;justify-content:center;align-items:flex-start;margin-top:14px}
+  .dwrap{text-align:center;min-width:150px}
+  .bdial{width:150px;height:150px;border-radius:50%;margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--ring) calc(var(--util)*360deg),#E7E9EE 0);transition:box-shadow .3s}
+  .bdial::after{content:"";position:absolute;inset:12px;border-radius:50%;background:var(--panel);box-shadow:inset 0 0 0 1px rgba(16,24,40,.05)}
+  .bc{position:relative;z-index:1;text-align:center}
+  .bpct{font:700 34px/1 "Space Grotesk";letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .bof{display:block;font-size:11px;color:var(--muted);margin-top:5px}
+  .blabel{font-weight:600;font-size:14.5px;margin-top:14px}
+  .bstat{font-family:"Space Grotesk";font-size:13px;margin-top:5px}
+
+  /* Assumptions (Jeffrey hero) */
+  .assume{max-width:620px;margin:24px auto 0;text-align:center}
+  .assume .line{font-size:14.5px;color:var(--ink-2);line-height:1.7}
+  .assume .line b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sliders{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 30px;margin-top:14px}
+  .ctrl{display:flex;align-items:center;gap:10px}
+  .ctrl label{font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+  .ctrl input[type=range]{width:120px;accent-color:var(--accent);height:18px;cursor:pointer}
+
+  /* Editorial table (Jeffrey) */
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl thead th{font-family:"Space Grotesk";font-weight:600;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 0 12px;border-bottom:1px solid var(--ink)}
+  .tbl thead th.r{text-align:right}.tbl thead th.c{text-align:center}
+  .tbl td{padding:15px 0;border-bottom:1px solid var(--line-2);vertical-align:top}
+  .tbl td.hcol,.tbl td.ccol{width:104px}.tbl td.pcol{width:88px}
+  .tname{font-weight:600;font-size:15px}
+  .tname .tag{font-family:"Space Grotesk";font-weight:600;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:2px 5px;margin-left:9px;vertical-align:1px;background:#FBFBFC}
+  .tscope{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45;max-width:52ch}
+  .hin{width:100%;font-family:"Space Grotesk";font-weight:600;font-size:15px;text-align:right;color:var(--ink);border:0;border-bottom:1.5px solid var(--line);padding:5px 2px;background:transparent;font-variant-numeric:tabular-nums;transition:border-color .15s}
+  .hin:hover{border-bottom-color:var(--muted)} .hin:focus{outline:none;border-bottom-color:var(--accent)}
+  .cad{width:100%;font-family:"Inter";font-size:13px;color:var(--ink-2);border:0;border-bottom:1.5px solid var(--line);padding:5px 2px;background:transparent;cursor:pointer;transition:border-color .15s}
+  .cad:hover{border-bottom-color:var(--muted)} .cad:focus{outline:none;border-bottom-color:var(--accent)}
+  .perwk{text-align:right;font-family:"Space Grotesk";font-weight:600;font-size:15px;font-variant-numeric:tabular-nums;padding-top:5px}
+  .perwk small{display:block;font-weight:400;font-size:9.5px;color:var(--muted);margin-top:3px}
+  .tbl tr.total td{border-bottom:0;border-top:2px solid var(--ink);padding-top:15px}
+  .tbl tr.total .tname{font-family:"Space Grotesk";font-weight:700;font-size:16px}
+  .legend{font-size:12px;color:var(--muted);margin-top:16px;display:flex;align-items:center;gap:8px}
+  .legend .tag{font-family:"Space Grotesk";font-weight:600;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:2px 5px;background:#FBFBFC}
+
+  /* Insights (Jeffrey) */
+  .readblock{border-top:2px solid var(--ink);border-bottom:1px solid var(--line);padding:22px 0 24px;margin-bottom:32px}
+  .readblock p{margin:0 0 16px;font-size:15px;color:var(--ink-2);line-height:1.6;max-width:70ch}
+  .readblock p:last-child{margin:0}
+  .readblock b{font-weight:600;color:var(--ink)}
+  .readblock .rl{font-family:"Space Grotesk";font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+  .findings{margin-top:8px}
+  .finding{padding:18px 0;border-bottom:1px solid var(--line-2)}
+  .finding:first-child{padding-top:4px}
+  .finding h4{font-family:"Space Grotesk";font-weight:600;font-size:16px;margin:0 0 8px;color:var(--ink)}
+  .finding p{margin:0;font-size:14.5px;color:var(--ink-2);line-height:1.6;max-width:72ch}
+  .finding p b{font-weight:600;color:var(--ink)}
+  .sect{font-family:"Space Grotesk";font-weight:600;font-size:19px;margin:0 0 4px}
+  .next{margin-top:14px;counter-reset:step}
+  .nextitem{display:flex;gap:16px;padding:15px 0;border-bottom:1px solid var(--line-2);max-width:76ch}
+  .nextitem:before{counter-increment:step;content:counter(step);font-family:"Space Grotesk";font-weight:700;font-size:20px;color:var(--accent);line-height:1;flex:0 0 auto;min-width:22px}
+  .nextitem div{font-size:14.5px;color:var(--ink-2);line-height:1.6}
+  .nextitem b{color:var(--ink);font-weight:600}
+
+  /* Generic block */
+  .block{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;box-shadow:var(--shadow);margin-bottom:16px}
+  .block h3{font-family:"Space Grotesk";font-size:17px;font-weight:600;margin-bottom:12px}
+  .block p{margin:0 0 10px;font-size:14.5px;color:var(--ink-2);line-height:1.55;max-width:84ch}
+  .block p:last-child{margin-bottom:0}
+  .block ul{margin:6px 0 10px;padding-left:18px;font-size:14.5px;color:var(--ink-2);line-height:1.5;max-width:84ch}
+  .block li{margin:8px 0}
+  .kv{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  .kv .k{background:var(--accent-soft);border:1px solid #DDE1FF;border-radius:8px;padding:9px 13px;font-size:13.5px;color:var(--ink)}
+  .kv .k b{font-family:"Space Grotesk";font-weight:600}
+
+  /* Comparison table (Together) */
+  .cmp{width:100%;border-collapse:collapse;margin-top:2px}
+  .cmp th{font-family:"Space Grotesk";font-weight:600;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 14px 12px 0;border-bottom:1px solid var(--ink)}
+  .cmp td{padding:14px 14px 14px 0;border-bottom:1px solid var(--line-2);font-size:14px;color:var(--ink-2);vertical-align:top;line-height:1.5}
+  .cmp td b{color:var(--ink);font-weight:600}
+  .cmp td .who{font-family:"Space Grotesk";font-weight:700;color:var(--ink);font-size:15px}
+  .cmp .u{font-variant-numeric:tabular-nums;font-family:"Space Grotesk";font-weight:600;color:var(--ink)}
+
+  footer{border-top:1px solid var(--line);margin-top:36px;padding-top:24px;font-size:13px;color:var(--muted)}
+  .links{display:flex;flex-wrap:wrap;gap:10px}
+  .links a{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-weight:500;display:inline-flex;align-items:center;gap:7px}
+  .foot-note{margin-top:14px;font-size:12px;color:var(--muted);max-width:80ch;line-height:1.5}
+
+  @media (max-width:760px){
+    .wrap{padding:28px 18px 56px}
+    .glance{grid-template-columns:repeat(2,1fr)}
+    .guide{grid-template-columns:1fr}
+    .lhead,.row{grid-template-columns:1fr 56px;gap:12px}
+    .lhead .hl.mh,.row .tstrip{display:none}
+    .tbl td.pcol,.tbl thead th.pcol{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Internal Enablement · FY27</div>
+    <h1>Bandwidth &amp; Workload</h1>
+    <p class="lede">A combined view of the team's committed work and available capacity, covering <b>Michael Negron</b> and <b>Jeffrey Marquez</b>. Pulled from the project trackers in Notion. Every estimate on the following tabs is adjustable, and the reads update as you change them.</p>
+  </header>
+
+  <div class="tabbar" role="tablist">
+    <button class="tab" role="tab" aria-selected="true"  data-t="overview">Overview</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="michael">Michael</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="jeffrey">Jeffrey</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="together">Together</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="conclusions">Conclusions</button>
+  </div>
+
+  <main id="views">
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <div class="panel active" id="overview">
+    <div class="intro">
+      <p>This document brings two separate reads into one place: <b>Michael's</b> committed FY27 build portfolio across the fiscal year, and <b>Jeffrey's</b> recurring weekly workload today set beside the role ahead. The goal is a single, honest picture of what the team is carrying and where it has room.</p>
+      <p>Everything on the following tabs is built from the project trackers in Notion, and every estimate is adjustable. Move a slider or edit a figure and the gauges, totals, and written reads recalculate as you go.</p>
+    </div>
+
+    <div class="ovlabel">At a glance</div>
+    <div class="glance">
+      <div class="stat"><div class="num">2</div><div class="lbl">People in this view: Michael and Jeffrey</div></div>
+      <div class="stat"><div class="num tnum">~113 h</div><div class="lbl">Michael's committed build effort, Aug 2026 to Feb 2027</div></div>
+      <div class="stat"><div class="num tnum">~60%</div><div class="lbl">Jeffrey's working week, today and in the role ahead</div></div>
+      <div class="stat"><div class="num">5</div><div class="lbl">Tabs in this document</div></div>
+    </div>
+
+    <div class="block">
+      <h3>What's in each tab</h3>
+      <div class="guide">
+        <div><b>Overview</b>What each tab covers, the shared assumptions behind the numbers, and how to read the gauges.</div>
+        <div><b>Michael</b>His committed FY27 build portfolio, a month-by-month read on how full his plate is, and the AI Champions decision.</div>
+        <div><b>Jeffrey</b>His weekly workload today, set beside the role ahead, and what the two add up to.</div>
+        <div><b>Together</b>The two plates side by side, and an honest read on where the team's capacity actually sits.</div>
+        <div><b>Conclusions</b>The combined takeaways and what to do next.</div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>How the numbers work</h3>
+      <ul>
+        <li><b>Effort is hands-on time, not calendar time.</b> Figures estimate the time spent producing the work, building the deliverables and running the sessions, not the meetings and coordination around it, and not elapsed weeks.</li>
+        <li><b>Content-heavy builds carry a larger allowance.</b> The certification paths and eLearnings are weighted up, since that kind of work has historically run past a first estimate.</li>
+        <li><b>Some lines are rough.</b> A few items are early estimates with little or no time logged yet. Michael's AI Certification excludes L4 (scope still TBD) and Case Management SLA is a rough figure. On Jeffrey's tab, lines marked <span class="tag">est</span> are awaiting his confirmation.</li>
+        <li><b>Everything is editable.</b> Sliders and input fields are adjustable estimates. Change any of them and the reads update live, so the picture can be pressure-tested with your own assumptions.</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h3>How to read the gauges</h3>
+      <p>Each gauge shows how much of the available time is already committed. So 70% means about seven-tenths of that period's available hours are spoken for, leaving roughly three-tenths open. Over 100% means the period needs more time than there is.</p>
+      <div class="ramp">
+        <div class="rampitem"><span class="rampdot" style="background:#2A7D74"></span><b>Room to spare</b>&nbsp;under 35%</div>
+        <div class="rampitem"><span class="rampdot" style="background:#067647"></span><b>Cruising</b>&nbsp;35 to 60%</div>
+        <div class="rampitem"><span class="rampdot" style="background:#5B8C1E"></span><b>Busy</b>&nbsp;60 to 75%</div>
+        <div class="rampitem"><span class="rampdot" style="background:#CC7A1F"></span><b>Slammed</b>&nbsp;75 to 90%</div>
+        <div class="rampitem"><span class="rampdot" style="background:#DC6803"></span><b>Maxed</b>&nbsp;90 to 100%</div>
+        <div class="rampitem"><span class="rampdot" style="background:#B42318"></span><b>Cooked</b>&nbsp;over 100%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MICHAEL ===================== -->
+  <div class="panel" id="michael">
+    <div class="intro">
+      <p>Michael's workload and available bandwidth: the committed projects on his plate, the effort each takes, when that effort lands, and how full each month is.</p>
+      <p class="about">Effort figures are start-of-project estimates of hands-on build time: producing the deliverables, not calendar time or the meetings and coordination around them. Content-heavy builds (the certification paths and the eLearnings) carry a larger allowance, since work of that kind has historically run well beyond a first estimate. AI Certification excludes L4 (scope still TBD), and Case Management SLA is a rough estimate with no time logged yet. On the Bandwidth sub-tab, management and coaching is set at about 15% (roughly six hours a week, including 1:1s, coaching, and review), and the available-time inputs there are all adjustable.</p>
+    </div>
+
+    <div class="ovlabel">Overview</div>
+    <div class="glance">
+      <div class="stat"><div class="num tnum">~113 h</div><div class="lbl">Committed project build effort, Aug 2026 to Feb 2027</div></div>
+      <div class="stat"><div class="num tnum">7</div><div class="lbl">Committed and scoped projects</div></div>
+      <div class="stat"><div class="num">Nov · Dec</div><div class="lbl">Months with the most concurrent build effort</div></div>
+      <div class="stat"><div class="num">+ ongoing</div><div class="lbl">Operational work not itemized here</div></div>
+    </div>
+
+    <div class="subtabs" role="tablist">
+      <button class="subtab" role="tab" aria-selected="true"  data-sp="mPortfolio">Committed &amp; Scoped</button>
+      <button class="subtab" role="tab" aria-selected="false" data-sp="mBandwidth">Bandwidth</button>
+      <button class="subtab" role="tab" aria-selected="false" data-sp="mDecision">Decision</button>
+    </div>
+
+    <!-- Michael: Portfolio -->
+    <div class="subpanel active" id="mPortfolio">
+      <p class="panel-head">Each committed initiative with its estimated build effort and the months that effort falls in. Names link to the tracker in Notion.</p>
+      <div class="keys">
+        <span class="keygroup"><span class="kt">Lift</span> relative build effort:
+          <span class="chip c-heavy">heavy</span><span class="chip c-medium">medium</span><span class="chip c-light">light</span><span class="chip c-minimal">minimal</span></span>
+        <span class="keygroup"><span class="kt">Timing strip</span> one cell per month, Aug 2026 to Feb 2027; a darker cell means more of that project's effort falls that month:
+          <span class="kmini">less</span><span class="scaledemo"></span><span class="kmini">more</span></span>
+      </div>
+      <div class="ledger">
+        <div class="lhead">
+          <div class="hl">Initiative</div>
+          <div class="hl mh"><div class="months" id="monthHead"></div></div>
+          <div class="hl" style="text-align:right">Effort</div>
+        </div>
+        <div id="ledgerRows"></div>
+      </div>
+
+      <div class="block">
+        <h3>What isn't counted here</h3>
+        <p>The committed work above is not the whole demand picture. Several things draw on the same hours and are left out of the numbers on purpose, because they aren't scoped yet:</p>
+        <ul>
+          <li><a href="https://app.notion.com/p/54e9e7cb1f4c4703aa939e9653a4dcd5" target="_blank" rel="noopener">Map the customer journey (#14)</a> <span class="ilabel">FY27 initiative</span>, leader training on using the journey maps plus a scoping prompt in the initiative template; gated on the maps shipping, with scope locking mid-Q1.</li>
+          <li><a href="https://app.notion.com/p/38bfdd08fcdc8008ab53eac0097c142b" target="_blank" rel="noopener">Customer Base Health Score (#15)</a> <span class="ilabel">FY27 initiative</span>, playbooks, training, and a certification once the score ships; discovery not yet done.</li>
+          <li><a href="https://app.notion.com/p/391fdd08fcdc80a8b8e1cbfd9c29096e" target="_blank" rel="noopener">Evolve Commercial CS agentic-first (#16)</a> <span class="ilabel">FY27 initiative</span>, the behavioral-shift enablement for the new agent-led model; unconfirmed until discovery with Jason.</li>
+          <li><a href="https://app.notion.com/p/359fdd08fcdc81909813dbcd814f3363" target="_blank" rel="noopener">Data Ecosystem Foundations Training</a> <span class="ilabel ilabel-alt">requested item</span> and the <a href="https://app.notion.com/p/3b3fdd08fcdc81af993ac080e6e4e451" target="_blank" rel="noopener">Funding Timeline Refresher</a> <span class="ilabel ilabel-alt">requested item</span>, live requests already in flight.</li>
+          <li>The steady stream of <b>ad hoc</b> enablement questions and requests.</li>
+        </ul>
+        <p>The headroom the meters show is what absorbs this. It is reserved capacity for known but unscoped demand, not free time waiting to be assigned. Scoped roughly, it is about <b>40 hours</b> of additional work, and the projected meter on the Bandwidth sub-tab dials it in.</p>
+      </div>
+    </div>
+
+    <!-- Michael: Bandwidth -->
+    <div class="subpanel" id="mBandwidth">
+      <p class="panel-head">Available build time is what's left after fixed commitments. The inputs are adjustable estimates, and the equation and monthly meters update as they change.</p>
+
+      <div class="bw-eq">
+        <h3>Weekly bandwidth</h3>
+        <p class="sub">Start from a working week and subtract fixed commitments.</p>
+        <div class="bw-grid">
+          <div class="dctrl"><label>Base hours / week <span class="dval" id="vBase">40</span></label><input type="range" id="dBase" min="30" max="50" step="1" value="40"></div>
+          <div class="dctrl"><label>Management &amp; coaching <span class="dval" id="vJeff">15%</span></label><input type="range" id="dJeff" min="0" max="70" step="5" value="15"></div>
+          <div class="dctrl"><label>Shrinkage (PTO, sick, breaks) <span class="dval" id="vShrink">20%</span></label><input type="range" id="dShrink" min="0" max="30" step="5" value="20"></div>
+          <div class="dctrl"><label>AI champion (self) <span class="dval" id="vChamp">20%</span></label><input type="range" id="dChamp" min="0" max="30" step="5" value="20">
+            <div class="modeswitch" id="champModeSwitch"><button data-m="remaining" class="on">% of remaining</button><button data-m="total">% of total</button></div>
+          </div>
+          <div class="dctrl"><label>Standing ops reserve <span class="dval" id="vOps">8 h/wk</span></label><input type="range" id="dOps" min="0" max="20" step="1" value="8"><div class="kmini" style="margin-top:7px">recurring day-to-day work outside the projects</div></div>
+        </div>
+        <p class="champnote">The <b>AI champion (self)</b> input is Michael's own 20% as a champion (building his own agents), separate from owning the program. Owning the <b>AI Champions Program</b> adds its build work, shown in the meters below via the ownership toggle, plus an ongoing management commitment noted under Decision. That ongoing load is deliberately not converted into a fixed number here, to avoid false precision.</p>
+        <div class="eqline" id="eqline"></div>
+        <div class="bw-out" id="bwout"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+
+      <div class="metercard">
+        <h3>The monthly meter</h3>
+        <p class="sub">Each gauge compares what the month needs, committed build effort plus ongoing operational work, against the hours available that month. So 75% means about three-quarters of that month's available hours are already committed, leaving roughly a quarter open. Over 100% means the month needs more than is available.</p>
+        <div class="mtoggle">
+          <span class="lab">AI Champions program ownership</span>
+          <div class="toggle" id="champToggle" role="switch" aria-checked="true" tabindex="0">
+            <span class="switch" id="champSwitch"><span class="knob"></span></span>
+            <span id="champLabel">Included</span>
+          </div>
+        </div>
+        <div class="meters" id="meters"></div>
+        <div class="spare" id="spare"></div>
+      </div>
+
+      <div class="block">
+        <h3>What was already scoped out</h3>
+        <p>This plate is what remains after deliberate triage. All 34 FY27 Client Ops initiatives were reviewed, and Internal Enablement was scoped out of roughly two-thirds of them, some because there was no real enablement role, several because the role was handed to the team that owned the work.</p>
+        <p>The largest single reduction was FTV. David's team originally looked to Enablement across several FTV workstreams, and scoping narrowed that to the two Enablement kept, handing the rest back, including <a href="https://app.notion.com/p/57221901450a45b3a99f3b58db58c470" target="_blank" rel="noopener">#4 the Customer Advocacy Engine</a> and <a href="https://app.notion.com/p/911732e74ee542d2879a170dfee8ca8a" target="_blank" rel="noopener">#5 the Sales &amp; CS Product Loop</a>. Combined with other initiatives Enablement was named on but does not own, <a href="https://app.notion.com/p/78ce0918327b4ff293d86b4dd4182704" target="_blank" rel="noopener">#10's Help Center content</a> and the <a href="https://app.notion.com/p/2eb4646b240241c59e026bcb7aa80233" target="_blank" rel="noopener">deflection-rate content (#24)</a>, the corrections took an estimated <b>35 to 45 hours</b> off the plate, much of it in the same November to December crunch. That relief is already banked.</p>
+      </div>
+
+      <div class="metercard">
+        <h3>The monthly meter, projected</h3>
+        <p class="sub">The same read, if the unscoped work lands. Each bar starts at a rough baseline; set the real scope as discovery firms it up and the gauges move. This is committed work plus the pipeline, against the same available hours.</p>
+        <div class="bw-grid" style="margin-top:14px">
+          <div class="dctrl"><label>Customer Base Health Score <span class="dval" id="pvHealth">14 h</span></label><input type="range" id="pHealth" min="0" max="30" step="1" value="14"></div>
+          <div class="dctrl"><label>Evolve Commercial CS <span class="dval" id="pvEvolve">9 h</span></label><input type="range" id="pEvolve" min="0" max="30" step="1" value="9"></div>
+          <div class="dctrl"><label>Data Ecosystem Foundations <span class="dval" id="pvData">12 h</span></label><input type="range" id="pData" min="0" max="30" step="1" value="12"></div>
+          <div class="dctrl"><label>Funding Timeline Refresher <span class="dval" id="pvFund">6 h</span></label><input type="range" id="pFund" min="0" max="15" step="1" value="6"></div>
+          <div class="dctrl"><label>Map the Customer Journey <span class="dval" id="pvJourney">8 h</span></label><input type="range" id="pJourney" min="0" max="30" step="1" value="8"></div>
+        </div>
+        <div class="meters" id="metersProj"></div>
+        <div class="spare" id="spareProj"></div>
+      </div>
+    </div>
+
+    <!-- Michael: Decision -->
+    <div class="subpanel" id="mDecision">
+      <p class="panel-head">A recommendation on the open question this view was built to answer.</p>
+      <div class="block" style="border-left:3px solid #067647">
+        <h3>Recommendation: take on the AI Champions program in October, when L2 wraps, and build it in November</h3>
+        <p>The program adds about <b>14 hours</b>, and there is room to take it on now rather than parking the build in the January lull. Discovery starts in <b>October</b> once L2 is built, and the build runs in <b>November</b>.</p>
+        <p>Concentrating the build in November pushes that month to about <b>73%</b>, the busiest point of the year, but still short of full. The trade is deliberate: the program is done by the end of November, which keeps December through February open for the unscoped pipeline (Health Score and the rest) rather than stacking the two on top of each other.</p>
+        <div class="kv">
+          <div class="k">Take-over: <b>October</b>, after L2</div>
+          <div class="k">Build in <b>November</b></div>
+          <div class="k">November peak <b>~73%</b></div>
+          <div class="k">Dec to Feb kept open for the pipeline</div>
+        </div>
+        <p>One caveat the meters can't capture: taking on the program is also a <b>standing management commitment</b> to roughly 20 champions, continuous, not a one-time build. That ongoing load isn't in the ~14 hours and should be weighed alongside the build fit.</p>
+      </div>
+
+      <div class="block">
+        <h3>What taking it on involves</h3>
+        <p>The program work, what "build" refers to above, is five workstreams, none of them large. The plan leads with discovery and builds the rest once the fall crunch clears.</p>
+        <ul>
+          <li><b>Discovery with Champions:</b> learn where the program helps, where it gets in the way, and turn that into a short list of adjustments.</li>
+          <li><b>Improve tracking:</b> build one agent that keeps the Champions' records in Linear and the Notion page current and nudges them weekly on anything missing. This is the heaviest piece.</li>
+          <li><b>Model and reasoning governance:</b> get Champions logging which model and reasoning level they use per build, and extend that same agent to check those choices against Jacob's governance model and flag recommendations.</li>
+          <li><b>Leadership reporting:</b> a lightweight quarterly report on the program's value, assembled from work that already exists rather than new data collection.</li>
+          <li><b>A better Champions meeting:</b> redesign the meeting format so the time is genuinely useful, based on what discovery surfaces.</li>
+        </ul>
+        <p>Full detail lives in the <a href="https://app.notion.com/p/3bafdd08fcdc813e881eff93687b610e" target="_blank" rel="noopener">program tracker</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== JEFFREY ===================== -->
+  <div class="panel" id="jeffrey">
+    <div class="intro">
+      <p>Jeffrey's weekly workload across the current role and the role ahead, <b>as reported by Jeffrey and vetted by Michael</b>. Every figure is editable.</p>
+    </div>
+
+    <div class="kick">The current role, beside the role ahead</div>
+    <div class="bigdials">
+      <div class="dwrap">
+        <div class="bdial" id="jDialCur"><div class="bc"><span class="bpct" id="jPctCur">0%</span><span class="bof">of available</span></div></div>
+        <div class="blabel">Current role</div><div class="bstat" id="jStatCur"></div>
+      </div>
+      <div class="dwrap">
+        <div class="bdial" id="jDialNew"><div class="bc"><span class="bpct" id="jPctNew">0%</span><span class="bof">of available</span></div></div>
+        <div class="blabel">The role ahead</div><div class="bstat" id="jStatNew"></div>
+      </div>
+    </div>
+    <div class="assume">
+      <div class="line">Assuming a <b id="jvBase">40</b>-hour week, less <b id="jvShrink">10</b> hours for time off, sick days, and breaks, leaves <b id="jAvail">30</b> hours of working time. Meetings are counted separately, as a task line.</div>
+      <div class="sliders">
+        <div class="ctrl"><label>Week length (hours)</label><input type="range" id="jBase" min="30" max="50" step="1" value="40"></div>
+        <div class="ctrl"><label>Shrinkage (hours)</label><input type="range" id="jShrink" min="0" max="20" step="1" value="10"></div>
+      </div>
+    </div>
+
+    <div class="subtabs" role="tablist" style="margin-top:26px">
+      <button class="subtab" role="tab" aria-selected="true"  data-sp="jCurrent">Current role</button>
+      <button class="subtab" role="tab" aria-selected="false" data-sp="jAhead">The role ahead</button>
+      <button class="subtab" role="tab" aria-selected="false" data-sp="jInsights">Insights</button>
+    </div>
+
+    <div class="subpanel active" id="jCurrent">
+      <p class="panel-head">Each task with its estimated hours and cadence. Edit any figure; the read follows on the Insights sub-tab.</p>
+      <table class="tbl">
+        <thead><tr><th>Task</th><th class="c hcol">Hours</th><th class="c ccol">Cadence</th><th class="r pcol">Per week</th></tr></thead>
+        <tbody id="curRows"></tbody>
+      </table>
+    </div>
+
+    <div class="subpanel" id="jAhead">
+      <p class="panel-head">Each task with its estimated hours and cadence. Edit any figure; the read follows on the Insights sub-tab.</p>
+      <table class="tbl">
+        <thead><tr><th>Task</th><th class="c hcol">Hours</th><th class="c ccol">Cadence</th><th class="r pcol">Per week</th></tr></thead>
+        <tbody id="newRows"></tbody>
+      </table>
+      <div class="legend"><span class="tag">est</span> still an estimate, not yet confirmed by Jeffrey</div>
+    </div>
+
+    <div class="subpanel" id="jInsights">
+      <div class="readblock" id="jReadBlock"></div>
+
+      <h3 class="sect">What it adds up to</h3>
+      <div class="findings">
+        <div class="finding"><h4>The expansion doesn't add load</h4><p>Both roles land at roughly the same weekly commitment. Trading one Table Read for dedicated trainings across three teams reshuffles the work more than it grows it, because the new team-specific work is modest and the general monthly wrap shrinks as those teams peel off to their own content. If that surprises you, the three-team build estimates are the likeliest place they run low.</p></div>
+        <div class="finding"><h4>Meetings were the missing piece</h4><p>Adding meetings closes most of the gap this view kept flagging. A calendar sample puts Jeffrey at roughly 6 hours of meetings a week (1:1s, syncs, All-Hands, planning), separate from shrinkage, which lifts the committed load to about 60% of the working week. What's left is a mix of the undercount noted below and genuine room. Real work on the plate is what tells you which.</p></div>
+        <div class="finding"><h4>These are Jeffrey's numbers, and they hold together</h4><p>The current-role figures are Jeffrey's own, and the Table Read breakdown lands right on the ~4 h/week the v2.5 time-savings doc used for the same work, a good sign they're trustworthy. The few new-role lines marked <b>est</b> are still estimates awaiting Jeffrey's input.</p></div>
+        <div class="finding"><h4>Staying current on the product is the swing factor</h4><p>At 4 h/week it's the biggest task line after meetings, and it carries into both roles unchanged since it doesn't scale with team count. If that number is soft, the whole picture moves with it, so it's the first one worth pressure-testing.</p></div>
+        <div class="finding"><h4>Read these as heads-down hours</h4><p>They're focused task times, not elapsed calendar time. Real weeks carry interruptions and context-switching these don't capture, so true utilization is probably somewhat higher than the percentages show. Not near full, though. The gap is too wide for that to be the whole story.</p></div>
+      </div>
+
+      <h3 class="sect" style="margin-top:38px">What to do next</h3>
+      <div class="next">
+        <div class="nextitem"><div><b>Test the ceiling with real work.</b> Hand Jeffrey a side project or two to run alongside the core role, and watch whether both can be carried at once. The time the new model buys back should leave room for it, and the test reveals where the real limit sits, which the numbers alone can't.</div></div>
+        <div class="nextitem"><div><b>Push from 60 toward 70.</b> With meetings counted, the week already sits near 60%. The room that's left is the target for a side project or two, deliberately loading toward the top of a healthy range while keeping a buffer rather than running to the edge.</div></div>
+        <div class="nextitem"><div><b>Let quality be the signal.</b> Treat it as a genuine test: if the core role or the standard of the work starts to slip, that's the true ceiling, not the percentage on the dial.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TOGETHER ===================== -->
+  <div class="panel" id="together">
+    <p class="panel-head">The two plates measure slightly different things, so this isn't one combined number. Michael's view is a fiscal-year build portfolio spread across months; Jeffrey's is a recurring weekly load. Placed side by side, they show where the team's capacity actually sits. These gauges are live, and move with the inputs on each person's tab.</p>
+
+    <div class="metercard">
+      <h3>Where the team stands</h3>
+      <p class="sub">Michael's monthly build read beside Jeffrey's weekly load. Each gauge reflects the current inputs on the Michael and Jeffrey tabs.</p>
+      <div class="bigdials">
+        <div class="dwrap"><div class="bdial" id="tgMavgD"><div class="bc"><span class="bpct" id="tgMavgP">0%</span><span class="bof">of available</span></div></div><div class="blabel">Michael, average month</div><div class="bstat" id="tgMavgS"></div></div>
+        <div class="dwrap"><div class="bdial" id="tgMpeakD"><div class="bc"><span class="bpct" id="tgMpeakP">0%</span><span class="bof">of available</span></div></div><div class="blabel" id="tgMpeakLbl">Michael, peak month</div><div class="bstat" id="tgMpeakS"></div></div>
+        <div class="dwrap"><div class="bdial" id="tgJcurD"><div class="bc"><span class="bpct" id="tgJcurP">0%</span><span class="bof">of available</span></div></div><div class="blabel">Jeffrey, current role</div><div class="bstat" id="tgJcurS"></div></div>
+        <div class="dwrap"><div class="bdial" id="tgJnewD"><div class="bc"><span class="bpct" id="tgJnewP">0%</span><span class="bof">of available</span></div></div><div class="blabel">Jeffrey, role ahead</div><div class="bstat" id="tgJnewS"></div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Two different kinds of full</h3>
+      <p>Michael's plate runs in a healthy band and looks like it has room, but that room is already spoken for by known work that isn't scoped yet, so it is a deliberate buffer rather than free time. His committed build sits in the ~40 to 73% range across the year, and no month is oversubscribed by build alone.</p>
+      <p>Jeffrey's plate sits near 60% with meetings counted, and that room is genuine and testable. His move into the role ahead reshuffles work more than it grows it, so both the current role and the role ahead land in roughly the same place.</p>
+    </div>
+
+    <div class="block">
+      <h3>Where the slack is</h3>
+      <table class="cmp">
+        <thead><tr><th>Person</th><th>Reads at</th><th>Nature of the room</th><th>Where new work goes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="who">Michael</span></td>
+            <td><span class="u" id="tblMavg">0%</span> avg, peak <span class="u" id="tblMpeak">0%</span></td>
+            <td>Reserved buffer for known but unscoped demand</td>
+            <td><b>Trade against existing work</b></td>
+          </tr>
+          <tr>
+            <td><span class="who">Jeffrey</span></td>
+            <td><span class="u" id="tblJcur">0%</span> today, about the same ahead</td>
+            <td>Genuine, testable headroom</td>
+            <td><b>First stop for net-new work</b></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:16px">On these numbers, the team's spare capacity sits with Jeffrey, not Michael. New net-new work is best routed to Jeffrey, where there is tested headroom to absorb a side project or two. Anything added to Michael should trade against something already on his plate, because there is no genuinely free time there to assign.</p>
+    </div>
+  </div>
+
+  <!-- ===================== CONCLUSIONS ===================== -->
+  <div class="panel" id="conclusions">
+    <p class="panel-head">The combined takeaways, and what to do next.</p>
+
+    <div class="block">
+      <h3>The team read</h3>
+      <p>The team is well deployed, with the two plates full in different ways.</p>
+      <p><b>Michael</b> is fully deployed with a deliberate buffer. His committed build runs in the ~40 to 73% band across the fiscal year, front and back loaded, with August to September and November to December busy and January to February light. It looks like there is room, but the visible headroom is held for demand that isn't scoped yet: two initiatives in discovery, live requests in flight, the ad hoc stream, and the risk that the content-heavy fall builds run long. There is no genuinely free time to assign, and new net-new work should trade against something already on the plate.</p>
+      <p><b>Jeffrey's</b> move into the role ahead reshuffles work more than it grows it. Both the current role and the role ahead land near 60% of a working week once meetings are counted, so the expansion to three teams is close to load-neutral. The room that's left is real, and the swing factor to watch is staying current on the product, the biggest line after meetings and the one that doesn't scale with team count.</p>
+      <p><b>Together</b>, the team's spare capacity sits with Jeffrey, not Michael.</p>
+    </div>
+
+    <div class="block">
+      <h3>What to do next</h3>
+      <div class="next">
+        <div class="nextitem"><div><b>Take on AI Champions in October, build in November.</b> Discovery once L2 wraps, with the build concentrated in November. That peaks the month near 73% but keeps December through February open for the unscoped pipeline rather than stacking the two together.</div></div>
+        <div class="nextitem"><div><b>Route net-new demand to Jeffrey first.</b> That's where there's tested headroom. Give him a side project or two alongside the core role and watch whether both hold at once.</div></div>
+        <div class="nextitem"><div><b>Push Jeffrey's week from about 60 toward 70.</b> Load deliberately toward the top of a healthy range while keeping a buffer, rather than running to the edge.</div></div>
+        <div class="nextitem"><div><b>Protect Michael's buffer.</b> New work on his plate should trade against something already there, since the visible room is reserved, not free.</div></div>
+        <div class="nextitem"><div><b>Let quality be the signal.</b> For both, if the standard of the work or the core role starts to slip, that's the true ceiling, not the percentage on the dial.</div></div>
+      </div>
+      <p style="margin-top:18px">All of this rests on estimates. The lines marked as rough or <span class="tag">est</span> are the first to pressure-test, and the reads move if those numbers move.</p>
+    </div>
+  </div>
+
+  </main>
+
+  <footer>
+    <div class="links">
+      <a href="https://app.notion.com/p/3adfdd08fcdc8138b51ce480fa95724d" target="_blank" rel="noopener">FY27 Enablement Roadmap ↗</a>
+      <a href="https://app.notion.com/p/390fdd08fcdc81edae3ee261fc762cf3" target="_blank" rel="noopener">Roadmap vs. FY27 CO Initiatives ↗</a>
+      <a href="https://app.notion.com/p/3cefdd08fcdc80e4a712e5ad1b3d5a34" target="_blank" rel="noopener">v2.5 time-savings estimate ↗</a>
+      <a href="https://app.notion.com/p/396fdd08fcdc81bc9db2e37dc06bac2d" target="_blank" rel="noopener">Optimize the Product Enablement Program v2.5 ↗</a>
+    </div>
+    <p class="foot-note">Michael's figures are start-of-project build estimates; Jeffrey's are weekly task figures reported by Jeffrey and vetted by Michael. Every input on the tabs above is editable, and nothing here is calendar time.</p>
+  </footer>
+
+</div>
+
+<script>
+/* ============ Bridge: shared status, Together render, tab wiring ============ */
+(function(){
+  window.__BW = {};
+  function SF(u){
+    if(u>1.00) return {t:"Cooked",c:"#B42318"};
+    if(u>=0.90) return {t:"Maxed",c:"#DC6803"};
+    if(u>=0.75) return {t:"Slammed",c:"#CC7A1F"};
+    if(u>=0.60) return {t:"Busy",c:"#5B8C1E"};
+    if(u>=0.35) return {t:"Cruising",c:"#067647"};
+    return {t:"Room to spare",c:"#2A7D74"};
+  }
+  function setTxt(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+  function paintBig(dialId,pctId,statId,u){
+    var s=SF(u), fill=Math.min(u,1);
+    var d=document.getElementById(dialId); if(!d) return;
+    d.style.setProperty("--util",fill.toFixed(3));
+    d.style.setProperty("--ring",s.c);
+    var p=document.getElementById(pctId); if(p){ p.textContent=Math.round(u*100)+"%"; p.style.color=s.c; }
+    var st=document.getElementById(statId); if(st){ st.textContent=s.t; st.style.color=s.c; }
+  }
+  window.renderTogether=function(){
+    var m=window.__BW.michael, j=window.__BW.jeffrey;
+    if(m){
+      paintBig("tgMavgD","tgMavgP","tgMavgS",m.avg);
+      paintBig("tgMpeakD","tgMpeakP","tgMpeakS",m.peak);
+      setTxt("tblMavg",Math.round(m.avg*100)+"%");
+      setTxt("tblMpeak",Math.round(m.peak*100)+"% ("+m.peakMonth+")");
+      var lbl=document.getElementById("tgMpeakLbl"); if(lbl) lbl.textContent="Michael, peak month ("+m.peakMonth+")";
+    }
+    if(j){
+      paintBig("tgJcurD","tgJcurP","tgJcurS",j.cur);
+      paintBig("tgJnewD","tgJnewP","tgJnewS",j.ahead);
+      setTxt("tblJcur",Math.round(j.cur*100)+"%");
+    }
+  };
+
+  /* Primary tabs */
+  var tabs=[].slice.call(document.querySelectorAll(".tabbar .tab"));
+  tabs.forEach(function(t){
+    t.addEventListener("click",function(){
+      tabs.forEach(function(x){x.setAttribute("aria-selected","false");});
+      t.setAttribute("aria-selected","true");
+      document.querySelectorAll("#views > .panel").forEach(function(p){p.classList.remove("active");});
+      var tgt=document.getElementById(t.dataset.t); if(tgt) tgt.classList.add("active");
+    });
+  });
+
+  /* Sub tabs (scoped to their enclosing primary panel) */
+  [].slice.call(document.querySelectorAll(".subtab")).forEach(function(b){
+    b.addEventListener("click",function(){
+      var bar=b.closest(".subtabs");
+      bar.querySelectorAll(".subtab").forEach(function(x){x.setAttribute("aria-selected","false");});
+      b.setAttribute("aria-selected","true");
+      var host=b.closest(".panel");
+      host.querySelectorAll(".subpanel").forEach(function(p){p.classList.remove("active");});
+      var tgt=host.querySelector("#"+b.dataset.sp); if(tgt) tgt.classList.add("active");
+    });
+  });
+})();
+
+/* ============ Michael: ledger, bandwidth, meters, projected ============ */
+(function(){
+  var WPM=4.33;
+  var months=["Aug","Sep","Oct","Nov","Dec","Jan","Feb"];
+  var years =["'26","'26","'26","'26","'26","'27","'27"];
+  var projects=[
+    {name:"AI Certification (L1 to L4)", weight:"heavy", total:2497, url:"https://app.notion.com/p/3a5fdd08fcdc814e82d6d622f2f4b1fe",
+      scope:"L1 to L4 certification paths in WorkRamp.", note:"L4 TBD", label:"FY27 initiative",
+      timing:"Front-loaded Aug to Sep (L1, L2), then L3 spread Oct to Dec.", champ:false, m:[1083,492,308,308,306,0,0]},
+    {name:"Tiered FTV Service Model", weight:"heavy", total:1338, url:"https://app.notion.com/p/3b9fdd08fcdc81208cfeed74f2d109c1",
+      scope:"Go-live enablement, two eLearnings, and a CSM agent.", label:"FY27 initiative",
+      timing:"Light touch at Sep go-live, then concentrated Nov to Dec.", champ:false, m:[0,132,0,603,603,0,0]},
+    {name:"AI Champions Program", weight:"heavy", total:840, url:"https://app.notion.com/p/3bafdd08fcdc813e881eff93687b610e",
+      scope:"Discovery, one tracking agent, model/reasoning governance, a report, a meeting redesign.", label:"added",
+      timing:"Discovery in October, built in November.", champ:true, m:[0,0,135,705,0,0,0]},
+    {name:"Production Accounting Redesign", weight:"heavy", total:1044, url:"https://app.notion.com/p/3b9fdd08fcdc816d954be11452ab3168",
+      scope:"Core eLearning and a manager guide for the redesigned model.", label:"FY27 initiative",
+      timing:"Ramps Sep to Oct, concentrated Nov to Dec.", champ:false, m:[0,51,180,381,432,0,0]},
+    {name:"Case Management SLA Framework", weight:"medium", total:420, url:"https://app.notion.com/p/3adfdd08fcdc810abc64cc57d463af23",
+      scope:"Reference guide plus manager and IC enablement.", note:"estimate", label:"FY27 initiative",
+      timing:"Concentrated Aug to Oct.", champ:false, m:[60,240,120,0,0,0,0]},
+    {name:"Enable Support on the SMS Channel", weight:"medium", total:432, url:"https://app.notion.com/p/3b9fdd08fcdc81378815c27a5befa41f",
+      scope:"An eLearning path to enable Support on the SMS channel.", label:"FY27 initiative",
+      timing:"Concentrated Aug to Sep.", champ:false, m:[216,216,0,0,0,0,0]},
+    {name:"Answers Closer to the Specialist", weight:"light", total:201, url:"https://app.notion.com/p/3b9fdd08fcdc81818d01ffb1285370ae",
+      scope:"A light adoption and measurement motion, not a course.", label:"FY27 initiative",
+      timing:"Spread lightly across Sep to Dec.", champ:false, m:[0,60,45,48,48,0,0]}
+  ];
+  var rankW={heavy:0,medium:1,light:2,minimal:3};
+  var wcls={heavy:"c-heavy",medium:"c-medium",light:"c-light",minimal:"c-minimal"};
+  var rgb={heavy:"166,55,26",medium:"204,122,31",light:"224,184,76",minimal:"154,163,175"};
+  var tagText={"L4 TBD":"L4 TBD","estimate":"estimate","gated":"gated"};
+  var champOn=true, champMode="remaining", h=function(m){return m/60;};
+
+  /* Ledger */
+  document.getElementById("monthHead").innerHTML = months.map(function(m){return "<span>"+m+"</span>";}).join("");
+  (function(){
+    var rows=projects.slice().sort(function(a,b){return rankW[a.weight]-rankW[b.weight]||b.total-a.total;});
+    var html="";
+    rows.forEach(function(p){
+      var mx=Math.max.apply(null,p.m);
+      var strip=p.m.map(function(v,i){
+        if(v<=0) return '<div class="tcell" title="'+months[i]+" "+years[i]+': none"></div>';
+        var a=(0.22+0.78*(v/mx)).toFixed(2);
+        return '<div class="tcell" style="background:rgba('+rgb[p.weight]+','+a+')" title="'+months[i]+" "+years[i]+': '+h(v).toFixed(1)+'h"></div>';
+      }).join("");
+      var tag=p.note?'<span class="tag">'+tagText[p.note]+'</span>':'';
+      var lab=p.label?'<span class="ilabel'+(p.label!=="FY27 initiative"?" ilabel-alt":"")+'">'+p.label+'</span>':'';
+      html+='<div class="row">'
+        +'<div><div class="name"><a href="'+p.url+'" target="_blank" rel="noopener">'+p.name+'</a>'
+          +'<svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M17 7H9M17 7v8"/></svg>'
+          +'<span class="chip '+wcls[p.weight]+'">'+p.weight+'</span>'+tag+lab+'</div>'
+          +'<div class="scope">'+p.scope+'</div>'
+          +'<div class="timing"><b>When</b>'+p.timing+'</div></div>'
+        +'<div><div class="tstrip">'+strip+'</div></div>'
+        +'<div class="hrs tnum">'+h(p.total).toFixed(0)+'<small>hours</small></div>'
+      +'</div>';
+    });
+    var tot=h(projects.reduce(function(s,p){return s+p.total;},0));
+    html+='<div class="row total"><div class="name">Total committed build</div><div></div>'
+      +'<div class="hrs tnum">~'+tot.toFixed(0)+'<small>hours</small></div></div>';
+    document.getElementById("ledgerRows").innerHTML=html;
+  })();
+
+  /* Bandwidth + meter */
+  function bnum(id){return parseFloat(document.getElementById(id).value);}
+  function box(n,l){return '<div class="outbox"><div class="on tnum">'+n+'</div><div class="ol">'+l+'</div></div>';}
+  function computeBand(){
+    var base=bnum("dBase"), jf=bnum("dJeff")/100, sh=bnum("dShrink")/100, cp=bnum("dChamp")/100, opsWk=bnum("dOps");
+    var afterJeff=base*(1-jf), afterShrink=afterJeff*(1-sh);
+    var champHrs = champMode==="remaining" ? afterShrink*cp : base*cp;
+    var disc=afterShrink-champHrs; if(disc<0) disc=0;
+    return {base:base,jeffHrs:base*jf,shrinkHrs:afterJeff*sh,champHrs:champHrs,
+      disc:disc,discMo:disc*WPM,opsWk:opsWk,opsMo:opsWk*WPM,
+      buildHeadWk:Math.max(disc-opsWk,0),buildHeadMo:Math.max(disc-opsWk,0)*WPM};
+  }
+  function statusFor(u){
+    if(u>1.00) return {t:"Cooked",c:"#B42318",hot:true};
+    if(u>=0.90) return {t:"Maxed",c:"#DC6803",hot:true};
+    if(u>=0.75) return {t:"Slammed",c:"#CC7A1F",hot:false};
+    if(u>=0.60) return {t:"Busy",c:"#5B8C1E",hot:false};
+    if(u>=0.35) return {t:"Cruising",c:"#067647",hot:false};
+    return {t:"Room to spare",c:"#2A7D74",hot:false};
+  }
+  function meterHTML(u,i){
+    var s=statusFor(u), fill=Math.min(u,1);
+    return '<div class="meter"><div class="mdial'+(s.hot?" hot":"")+'" style="--util:'+fill.toFixed(3)+';--ring:'+s.c+'"><div class="mdv" style="color:'+s.c+'">'+Math.round(u*100)+'%</div></div>'
+      +'<div class="mmon">'+months[i]+' <small>'+years[i]+'</small></div>'
+      +'<div class="mstat" style="color:'+s.c+'">'+s.t+'</div></div>';
+  }
+  function renderBand(){
+    var b=computeBand();
+    document.getElementById("eqline").innerHTML=
+      '<span class="pill tnum">'+b.base.toFixed(0)+' base</span>'
+      +'<span class="op">\u2212</span><span class="pill tnum">'+b.jeffHrs.toFixed(1)+' management</span>'
+      +'<span class="op">\u2212</span><span class="pill tnum">'+b.shrinkHrs.toFixed(1)+' shrinkage</span>'
+      +'<span class="op">\u2212</span><span class="pill tnum">'+b.champHrs.toFixed(1)+' champion</span>'
+      +'<span class="op">=</span><span class="pill res tnum">'+b.disc.toFixed(1)+' h/wk</span>';
+    var active = champOn ? projects : projects.filter(function(p){return !p.champ;});
+    var mBuild = months.map(function(_,i){return active.reduce(function(s,p){return s+p.m[i];},0)/60;});
+    var totalBuild=mBuild.reduce(function(s,x){return s+x;},0);
+    var avgBuild=totalBuild/mBuild.length;
+    var peakBuild=Math.max.apply(null,mBuild), peakBI=mBuild.indexOf(peakBuild);
+    document.getElementById("bwout").innerHTML=
+      box(b.disc.toFixed(1)+' h','Discretionary time per week, after fixed commitments')
+      +box(b.buildHeadMo.toFixed(0)+' h','Available for building per month (discretionary minus the ops reserve)')
+      +box('~'+avgBuild.toFixed(0)+' h','Committed build needed, average month')
+      +box(peakBuild.toFixed(0)+' h','Committed build needed, peak month ('+months[peakBI]+')');
+    var v;
+    if(b.buildHeadMo>=peakBuild) v='Available build time (~<b>'+b.buildHeadMo.toFixed(0)+' h/mo</b>) covers even the peak month\u2019s committed build (~<b>'+peakBuild.toFixed(0)+' h</b>). The build portfolio fits inside available bandwidth.';
+    else v='At these settings, the peak month\u2019s committed build (~<b>'+peakBuild.toFixed(0)+' h</b>) exceeds available build time (~<b>'+b.buildHeadMo.toFixed(0)+' h/mo</b>), so that month is tight.';
+    document.getElementById("verdict").innerHTML=v;
+    var mh="", utils=[];
+    mBuild.forEach(function(bh,i){
+      var u = b.discMo>0 ? (bh+b.opsMo)/b.discMo : 0;
+      utils.push(u);
+      mh+=meterHTML(u,i);
+    });
+    document.getElementById("meters").innerHTML=mh;
+    var avgUtil=utils.reduce(function(s,x){return s+x;},0)/utils.length;
+    var peak=Math.max.apply(null,utils), peakIdx=utils.indexOf(peak);
+    var spareMo=b.discMo-b.opsMo-avgBuild;
+    var over=utils.filter(function(u){return u>1.001;}).length;
+    var msg='The average month runs at about <b>'+Math.round(avgUtil*100)+'% capacity</b>, with the busiest month, <b>'+months[peakIdx]+'</b>, at <b>'+Math.round(peak*100)+'%</b>. ';
+    if(over>0){ msg+='<b style="color:#B42318">'+over+(over>1?' months run':' month runs')+' over 100%</b> at these settings, oversubscribed, meaning something has to give. '; }
+    else { msg+='That leaves roughly <b>'+Math.max(spareMo,0).toFixed(0)+' hours</b> free in an average month. '; }
+    msg += champOn ? 'This <b>includes</b> owning the AI Champions program (its build lands in November).' : 'This <b>excludes</b> the AI Champions program.';
+    document.getElementById("spare").innerHTML=msg;
+
+    window.__BW.michael={avg:avgUtil,peak:peak,peakMonth:months[peakIdx],champOn:champOn};
+    if(window.renderTogether) window.renderTogether();
+
+    renderProjected();
+  }
+  ["dBase","dJeff","dShrink","dChamp","dOps"].forEach(function(id){
+    document.getElementById(id).addEventListener("input",function(){
+      var map={dBase:"vBase",dJeff:"vJeff",dShrink:"vShrink",dChamp:"vChamp",dOps:"vOps"};
+      var v=this.value;
+      document.getElementById(map[id]).textContent = (id==="dOps"? v+" h/wk" : id==="dBase"? v : v+"%");
+      renderBand();
+    });
+  });
+  [].slice.call(document.querySelectorAll("#champModeSwitch button")).forEach(function(btn){
+    btn.addEventListener("click",function(){
+      champMode=btn.dataset.m;
+      [].slice.call(document.querySelectorAll("#champModeSwitch button")).forEach(function(x){x.classList.toggle("on",x===btn);});
+      renderBand();
+    });
+  });
+  function toggleChamp(){
+    champOn=!champOn;
+    document.getElementById("champSwitch").classList.toggle("off",!champOn);
+    document.getElementById("champToggle").setAttribute("aria-checked",champOn);
+    document.getElementById("champLabel").textContent=champOn?"Included":"Excluded";
+    renderBand();
+  }
+  document.getElementById("champToggle").addEventListener("click",toggleChamp);
+  document.getElementById("champToggle").addEventListener("keydown",function(e){ if(e.key===" "||e.key==="Enter"){e.preventDefault();toggleChamp();} });
+
+  /* Projected meter (pipeline) */
+  var pipeline=[
+    {id:"pHealth",disp:"pvHealth",m:[0,0,0,0,0,0.5,0.5]},
+    {id:"pEvolve",disp:"pvEvolve",m:[0,0,0.333,0.333,0.334,0,0]},
+    {id:"pData",disp:"pvData",m:[0,0.5,0.5,0,0,0,0]},
+    {id:"pFund",disp:"pvFund",m:[0.5,0.5,0,0,0,0,0]},
+    {id:"pJourney",disp:"pvJourney",m:[0,0,0,0,0,0.5,0.5]}
+  ];
+  function renderProjected(){
+    var b=computeBand();
+    var active = champOn ? projects : projects.filter(function(p){return !p.champ;});
+    var committedMo = months.map(function(_,i){return active.reduce(function(s,p){return s+p.m[i];},0)/60;});
+    var pipeMo = months.map(function(_,i){return pipeline.reduce(function(s,pp){return s+bnum(pp.id)*pp.m[i];},0);});
+    var mh="", utils=[];
+    months.forEach(function(_,i){
+      var u = b.discMo>0 ? (committedMo[i]+pipeMo[i]+b.opsMo)/b.discMo : 0;
+      utils.push(u);
+      mh+=meterHTML(u,i);
+    });
+    document.getElementById("metersProj").innerHTML=mh;
+    var projAvg=utils.reduce(function(s,x){return s+x;},0)/utils.length;
+    var peak=Math.max.apply(null,utils), peakIdx=utils.indexOf(peak);
+    var cUtils=committedMo.map(function(bh,i){return b.discMo>0?(bh+b.opsMo)/b.discMo:0;});
+    var cAvg=cUtils.reduce(function(s,x){return s+x;},0)/cUtils.length;
+    var totalPipe=pipeline.reduce(function(s,pp){return s+bnum(pp.id);},0);
+    document.getElementById("spareProj").innerHTML=
+      'Committed today runs at about <b>'+Math.round(cAvg*100)+'%</b> on average. With the pipeline scoped as set here (<b>~'+Math.round(totalPipe)+' h</b> added), the average rises to <b>'+Math.round(projAvg*100)+'%</b>, peaking in <b>'+months[peakIdx]+'</b> at <b>'+Math.round(peak*100)+'%</b>. Most of it fills the January to February lull; the busy months tighten. This is before any brand-new requests.';
+  }
+  ["pHealth","pEvolve","pData","pFund","pJourney"].forEach(function(id){
+    document.getElementById(id).addEventListener("input",function(){
+      var map={pHealth:"pvHealth",pEvolve:"pvEvolve",pData:"pvData",pFund:"pvFund",pJourney:"pvJourney"};
+      document.getElementById(map[id]).textContent=this.value+" h";
+      renderProjected();
+    });
+  });
+
+  renderBand();
+})();
+
+/* ============ Jeffrey: task tables, dials, insights ============ */
+(function(){
+  var WPM=4.33;
+  var CAD={wk:{label:"Weekly", f:1}, biwk:{label:"Biweekly", f:0.5}, mo:{label:"Monthly", f:1/WPM}};
+  var fmt=function(n){return (Math.round(n*10)/10).toString();};
+
+  var current=[
+    {name:"Build the Table Read deck", scope:"The recurring product deck.", hrs:3, cad:"biwk"},
+    {name:"Stay current on product changes", scope:"Keeping up with what's shipping, including chasing down PMs. Ongoing, not tied to Table Read.", hrs:4, cad:"wk"},
+    {name:"Rehearse and write the script", scope:"Prep for delivering the Table Read.", hrs:2, cad:"biwk"},
+    {name:"Present the Table Read", scope:"Delivering the live session.", hrs:1, cad:"biwk", est:true},
+    {name:"Follow up after training", scope:"Post-session questions and follow-through.", hrs:0.25, cad:"biwk"},
+    {name:"Monthly wraps", scope:"~6 lightweight recap eLearnings a month.", hrs:4, cad:"mo"},
+    {name:"Product Pulse pages", scope:"Via Launchpad.", hrs:2, cad:"wk", est:true},
+    {name:"ProductKnowItOwl posts", scope:"Curating and scheduling the weekly posts.", hrs:2, cad:"wk"},
+    {name:"Meetings", scope:"Recurring 1:1s, syncs, planning, and All-Hands. ~6 h/week from a calendar sample, separate from shrinkage.", hrs:6, cad:"wk"}
+  ];
+  var future=[
+    {name:"Build 3 training decks", scope:"Role-customized for Support, FTV CS, and Commercial CS.", hrs:9, cad:"mo", est:true},
+    {name:"Stay current on product changes", scope:"Same standing weekly cost; doesn't scale with team count.", hrs:4, cad:"wk"},
+    {name:"Present live trainings to the 3 teams", scope:"2 to 3 live sessions each month.", hrs:3, cad:"mo", est:true},
+    {name:"Follow up after trainings", scope:"Across the three teams.", hrs:1, cad:"mo", est:true},
+    {name:"Accountability eLearnings for the 3 teams", scope:"One per team; heavier than a recap wrap.", hrs:3, cad:"mo"},
+    {name:"Monthly wraps, remaining teams", scope:"Recaps for everyone outside the three teams.", hrs:1, cad:"mo"},
+    {name:"Product Pulse pages", scope:"Via Launchpad.", hrs:2, cad:"wk", est:true},
+    {name:"ProductKnowItOwl posts", scope:"Curating and scheduling the weekly posts.", hrs:2, cad:"wk"},
+    {name:"Meetings", scope:"Recurring 1:1s, syncs, planning, and All-Hands. ~6 h/week from a calendar sample; assumed unchanged in the new role.", hrs:6, cad:"wk"}
+  ];
+
+  function perWeek(t){ return t.hrs * CAD[t.cad].f; }
+  function totalWk(list){ return list.reduce(function(s,t){return s+perWeek(t);},0); }
+  function bnum(id){ return parseFloat(document.getElementById(id).value); }
+  function avail(){ return Math.max(bnum("jBase")-bnum("jShrink"),0); }
+
+  function statusFor(u){
+    if(u>1.00) return {t:"Cooked",    c:"#A03418"};
+    if(u>=0.90) return {t:"Maxed",    c:"#C06A05"};
+    if(u>=0.75) return {t:"Slammed",  c:"#B0680C"};
+    if(u>=0.60) return {t:"Busy",     c:"#5B7A1E"};
+    if(u>=0.35) return {t:"Cruising", c:"#2E6E4E"};
+    return {t:"Room to spare",        c:"#2A7D74"};
+  }
+
+  function buildTable(list, mountId, prefix){
+    var html="";
+    list.forEach(function(t,i){
+      var tag = t.est ? '<span class="tag">est</span>' : '';
+      var opts="";
+      for(var k in CAD){ opts+='<option value="'+k+'"'+(k===t.cad?' selected':'')+'>'+CAD[k].label+'</option>'; }
+      html+='<tr>'
+        +'<td><div class="tname">'+t.name+tag+'</div><div class="tscope">'+t.scope+'</div></td>'
+        +'<td class="hcol"><input class="hin" type="number" min="0" step="0.25" id="'+prefix+'h_'+i+'" value="'+t.hrs+'"></td>'
+        +'<td class="ccol"><select class="cad" id="'+prefix+'c_'+i+'">'+opts+'</select></td>'
+        +'<td class="pcol"><div class="perwk" id="'+prefix+'p_'+i+'">'+fmt(perWeek(t))+'<small>h/wk</small></div></td>'
+      +'</tr>';
+    });
+    html+='<tr class="total"><td><div class="tname">Total</div></td><td class="hcol"></td><td class="ccol"></td>'
+      +'<td class="pcol"><div class="perwk" id="'+prefix+'tot">0<small>h/wk</small></div></td></tr>';
+    document.getElementById(mountId).innerHTML=html;
+    list.forEach(function(t,i){
+      document.getElementById(prefix+"h_"+i).addEventListener("input",function(){
+        var v=parseFloat(this.value); t.hrs=isNaN(v)?0:v; render();
+      });
+      document.getElementById(prefix+"c_"+i).addEventListener("change",function(){ t.cad=this.value; render(); });
+    });
+  }
+
+  function paintDial(dialId,pctId,statId,u){
+    var s=statusFor(u), fill=Math.min(u,1);
+    var d=document.getElementById(dialId);
+    d.style.setProperty("--util",fill.toFixed(3));
+    d.style.setProperty("--ring",s.c);
+    var p=document.getElementById(pctId); p.textContent=Math.round(u*100)+"%"; p.style.color=s.c;
+    var st=document.getElementById(statId); st.textContent=s.t; st.style.color=s.c;
+  }
+
+  function roleRead(list,label){
+    var com=totalWk(list), av=avail(), head=av-com, u=av>0?com/av:0;
+    return '<p><span class="rl">'+label+'</span>Committed work totals about <b>'+fmt(com)+' h/week</b> ('+Math.round(com*WPM)+' h/month) against <b>'+fmt(av)+' h/week</b> available, so roughly <b>'+Math.round(u*100)+'% full</b>. That leaves about <b>'+fmt(Math.max(head,0))+' h/week</b> unaccounted for.</p>';
+  }
+
+  function render(){
+    document.getElementById("jvBase").textContent=bnum("jBase");
+    document.getElementById("jvShrink").textContent=bnum("jShrink");
+    document.getElementById("jAvail").textContent=fmt(avail());
+
+    current.forEach(function(t,i){ document.getElementById("curp_"+i).innerHTML=fmt(perWeek(t))+'<small>h/wk</small>'; });
+    future.forEach(function(t,i){ document.getElementById("newp_"+i).innerHTML=fmt(perWeek(t))+'<small>h/wk</small>'; });
+    document.getElementById("curtot").innerHTML=fmt(totalWk(current))+'<small>h/wk</small>';
+    document.getElementById("newtot").innerHTML=fmt(totalWk(future))+'<small>h/wk</small>';
+
+    var av=avail();
+    var uCur=av>0?totalWk(current)/av:0, uNew=av>0?totalWk(future)/av:0;
+    paintDial("jDialCur","jPctCur","jStatCur",uCur);
+    paintDial("jDialNew","jPctNew","jStatNew",uNew);
+
+    var d=totalWk(future)-totalWk(current);
+    var cmp = Math.abs(d)<0.5 ? 'The two land within an hour of each other, so the move reshuffles the work more than it grows it.'
+            : (d>0 ? 'The role ahead is about '+fmt(d)+' h/week heavier than today.' : 'The role ahead is about '+fmt(Math.abs(d))+' h/week lighter than today.');
+    document.getElementById("jReadBlock").innerHTML=roleRead(current,"Current role")+roleRead(future,"The role ahead")+'<p>'+cmp+'</p>';
+
+    window.__BW.jeffrey={cur:uCur,ahead:uNew};
+    if(window.renderTogether) window.renderTogether();
+  }
+
+  ["jBase","jShrink"].forEach(function(id){ document.getElementById(id).addEventListener("input",render); });
+
+  buildTable(current,"curRows","cur");
+  buildTable(future,"newRows","new");
+  render();
+})();
+</script>
+</body>
+</html>
