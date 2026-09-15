@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support QAP · Catch-Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --violet: #6733FF;
+    --violet-hover: #5320E5;
+    --violet-deep: #4A20D4;
+    --violet-soft: #EEE9FF;
+    --violet-line: #C8B8FF;
+    --zircon: #F4F8FF;
+    --ebony: #030208;
+    --white: #FFFFFF;
+    --gray-50: #F8FAFC;
+    --gray-100: #F1F5F9;
+    --gray-200: #E2E8F0;
+    --gray-300: #CBD5E1;
+    --gray-400: #94A3B8;
+    --gray-500: #64748B;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-900: #0F172A;
+    --shadow-sm: 0 1px 2px rgba(3, 2, 8, 0.05);
+    --shadow-md: 0 4px 12px rgba(3, 2, 8, 0.06);
+    --shadow-lg: 0 8px 24px rgba(3, 2, 8, 0.08);
+    --shadow-violet: 0 8px 32px rgba(103, 51, 255, 0.15);
+    --radius: 12px;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  [data-theme="dark"] {
+    --zircon: #0A0812;
+    --white: #14121F;
+    --ebony: #F4F8FF;
+    --gray-50: #14121F;
+    --gray-100: #1A1826;
+    --gray-200: #2E2A3D;
+    --gray-300: #3D3852;
+    --gray-400: #64748B;
+    --gray-500: #94A3B8;
+    --gray-600: #B0B7C3;
+    --gray-700: #CBD5E1;
+    --violet-soft: #241F3D;
+    --violet-line: #4A3A80;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--zircon); color: var(--ebony);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+    font-feature-settings: 'ss01', 'cv11';
+    transition: background 0.3s, color 0.3s;
+  }
+  
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--violet), var(--violet-hover));
+    z-index: 100; transition: width 0.4s var(--ease);
+  }
+  .theme-toggle {
+    position: fixed; top: 20px; right: 24px;
+    background: transparent; border: 1px solid var(--gray-200);
+    color: var(--gray-500); padding: 6px 12px; border-radius: 6px;
+    font-size: 11px; font-family: inherit; font-weight: 500;
+    letter-spacing: 0.3px; cursor: pointer; z-index: 50;
+    transition: all 0.2s;
+  }
+  .theme-toggle:hover { color: var(--violet); border-color: var(--violet); }
+  .slide-counter {
+    position: fixed; bottom: 20px; right: 28px;
+    font-size: 12px; color: var(--gray-500);
+    font-weight: 500; z-index: 50; letter-spacing: 0.3px;
+  }
+  .slide-counter .current { color: var(--ebony); font-weight: 600; }
+  .nav-arrow {
+    position: fixed; top: 50%; transform: translateY(-50%);
+    background: var(--white); border: 1px solid var(--gray-200);
+    color: var(--gray-700); width: 36px; height: 36px; border-radius: 50%;
+    font-size: 14px; cursor: pointer; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm); transition: all 0.2s;
+  }
+  .nav-arrow:hover { background: var(--violet); border-color: var(--violet); color: white; }
+  .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-arrow:disabled:hover { background: var(--white); color: var(--gray-700); border-color: var(--gray-200); }
+  .nav-arrow.prev { left: 24px; }
+  .nav-arrow.next { right: 24px; }
+  .dots {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px; z-index: 50;
+  }
+  .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--gray-300); cursor: pointer;
+    transition: all 0.3s var(--ease);
+  }
+  .dot.active { background: var(--violet); width: 18px; border-radius: 100px; }
+  .dot:hover { background: var(--violet); opacity: 0.7; }
+  
+  .slides { position: relative; height: 100vh; width: 100vw; }
+  .slide {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
+    padding: 52px 80px 68px;
+    display: flex; flex-direction: column; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.35s var(--ease);
+    overflow-y: auto;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+  .slide-inner { max-width: 1160px; margin: 0 auto; width: 100%; }
+  
+  .eyebrow {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--violet); font-weight: 700; margin-bottom: 18px;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .eyebrow::before {
+    content: ""; width: 20px; height: 2px; background: var(--violet);
+    display: inline-block;
+  }
+  h1.title {
+    font-size: 38px; line-height: 1.1; font-weight: 700;
+    letter-spacing: -0.025em; margin-bottom: 18px; color: var(--ebony);
+    max-width: 960px;
+  }
+  h1.title-lg {
+    font-size: 52px; line-height: 1.05; font-weight: 700;
+    letter-spacing: -0.03em; margin-bottom: 24px; color: var(--ebony);
+  }
+  .lead {
+    font-size: 17px; color: var(--gray-600); font-weight: 400;
+    line-height: 1.55; max-width: 900px; margin-bottom: 24px;
+  }
+  p { font-size: 15px; color: var(--gray-600); margin-bottom: 12px; line-height: 1.6; }
+  p.narrative { font-size: 15px; color: var(--gray-700); line-height: 1.6; margin-bottom: 12px; }
+  strong { color: var(--ebony); font-weight: 600; }
+  
+  /* SLIDE 1 - Hero */
+  .hero-slide {
+    background: linear-gradient(135deg, var(--zircon) 0%, var(--white) 100%);
+    position: relative; overflow: hidden;
+  }
+  .hero-decor {
+    position: absolute; top: -200px; right: -200px;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--violet) 0%, transparent 65%);
+    opacity: 0.12; pointer-events: none;
+    animation: float 20s ease-in-out infinite;
+  }
+  .hero-decor-2 {
+    position: absolute; bottom: -300px; left: -200px;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle at 70% 70%, var(--violet) 0%, transparent 60%);
+    opacity: 0.08; pointer-events: none;
+    animation: float 25s ease-in-out infinite reverse;
+  }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(20px, -30px); }
+  }
+  .hero-slide .slide-inner { position: relative; z-index: 1; }
+  .brand-mark {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 44px;
+  }
+  .brand-mark-square {
+    width: 22px; height: 22px;
+    background: linear-gradient(135deg, var(--violet), var(--violet-deep));
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(103, 51, 255, 0.3);
+  }
+  .brand-mark-text {
+    font-size: 14px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.01em;
+  }
+  .brand-mark-divider { color: var(--gray-300); margin: 0 2px; }
+  .brand-mark-date {
+    font-size: 13px; color: var(--gray-500); font-weight: 500;
+  }
+  h1.hero {
+    font-size: 88px; line-height: 0.95; font-weight: 800;
+    letter-spacing: -0.045em; margin-bottom: 28px; color: var(--ebony);
+  }
+  h1.hero .accent {
+    background: linear-gradient(90deg, var(--violet) 0%, var(--violet-deep) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+  }
+  .hero-tagline {
+    font-size: 20px; color: var(--gray-600); font-weight: 400;
+    line-height: 1.45; max-width: 700px; margin-bottom: 48px;
+  }
+  .hero-byline {
+    display: flex; gap: 40px; padding-top: 24px;
+    border-top: 1px solid var(--gray-200); max-width: 640px;
+  }
+  .hero-byline-block { display: flex; flex-direction: column; gap: 4px; }
+  .hero-byline-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--gray-500); font-weight: 600;
+  }
+  .hero-byline-name {
+    font-size: 16px; font-weight: 600; color: var(--ebony);
+    letter-spacing: -0.01em;
+  }
+  .hero-byline-role {
+    font-size: 13px; color: var(--gray-500); margin-top: 2px;
+  }
+
+  /* PROBLEM SLIDE */
+  .problem-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-top: 18px;
+  }
+  .problem-card {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 10px; padding: 16px 18px;
+    border-left: 3px solid var(--violet);
+  }
+  .problem-num {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 4px;
+  }
+  .problem-title {
+    font-size: 15px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.01em; margin-bottom: 4px;
+  }
+  .problem-desc {
+    font-size: 13px; color: var(--gray-600); line-height: 1.5;
+  }
+
+  /* QAP DEFINITION / LOOP */
+  .qap-def-layout {
+    display: grid; grid-template-columns: 1.2fr 0.8fr;
+    gap: 36px; margin-top: 4px;
+  }
+  .qap-def-loop {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 22px;
+  }
+  .qap-def-loop-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--gray-500); font-weight: 700; margin-bottom: 12px;
+  }
+  .loop-step {
+    display: grid; grid-template-columns: 30px 1fr;
+    gap: 12px; align-items: baseline;
+    padding: 8px 0; position: relative;
+  }
+  .loop-step:not(:last-child)::after {
+    content: ""; position: absolute; left: 14px; top: 30px;
+    bottom: -6px; width: 2px; background: var(--violet-line);
+  }
+  .loop-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--violet-soft); color: var(--violet);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .loop-content h4 {
+    font-size: 13px; font-weight: 700; color: var(--ebony);
+    margin-bottom: 2px; letter-spacing: -0.01em;
+  }
+  .loop-content p {
+    font-size: 12px; color: var(--gray-600); margin: 0; line-height: 1.5;
+  }
+
+  /* ISSUES / FAILURE MODES */
+  .issues-list {
+    display: flex; flex-direction: column; gap: 9px;
+    margin-top: 18px;
+  }
+  .issue-item {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 10px; padding: 14px 18px;
+    display: grid; grid-template-columns: 34px 1fr;
+    gap: 16px; align-items: baseline;
+  }
+  .issue-num {
+    font-size: 18px; font-weight: 700; color: var(--violet);
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .issue-content h4 {
+    font-size: 14px; font-weight: 600; color: var(--ebony);
+    margin-bottom: 3px; letter-spacing: -0.015em;
+  }
+  .issue-content p {
+    font-size: 13px; color: var(--gray-600); margin: 0; line-height: 1.5;
+  }
+  .issues-note {
+    margin-top: 14px; padding: 12px 18px;
+    background: var(--violet-soft); border-radius: 8px;
+    font-size: 13px; color: var(--ebony); font-weight: 500;
+    line-height: 1.5; text-align: center;
+  }
+  .issues-note strong { color: var(--violet); }
+
+  /* PHASES / DESIGN MAP */
+  .phases-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px; margin-top: 20px;
+  }
+  .phase-card {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 20px 20px;
+    transition: all 0.25s var(--ease);
+    display: flex; flex-direction: column;
+  }
+  .phase-card:hover {
+    border-color: var(--violet-line); box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  .phase-num {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 8px;
+  }
+  .phase-title {
+    font-size: 24px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 10px;
+  }
+  .phase-desc {
+    font-size: 13px; color: var(--gray-600); line-height: 1.55;
+    margin-bottom: 14px; flex-grow: 1;
+  }
+  .phase-what {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--gray-500); font-weight: 700; margin-bottom: 5px;
+    padding-top: 12px; border-top: 1px solid var(--gray-200);
+  }
+  .phase-what-value {
+    font-size: 12px; color: var(--ebony); font-weight: 500;
+    line-height: 1.5;
+  }
+
+  /* DEEP DIVE SHARED */
+  .phase-hero {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--violet-soft); border-radius: 100px;
+    padding: 6px 18px 6px 6px; margin-bottom: 18px;
+    align-self: flex-start;
+  }
+  .phase-hero-badge {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--violet); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .phase-hero-name {
+    font-size: 13px; font-weight: 700; color: var(--violet);
+    letter-spacing: -0.01em;
+  }
+  .deep-layout {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 30px; margin-top: 4px;
+  }
+  .deep-narrative p {
+    font-size: 15px; color: var(--gray-700); line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .deep-narrative p:last-child { margin-bottom: 0; }
+
+  /* LOADING VIZ */
+  .loading-viz {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .source-card {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 12px; padding: 14px 18px;
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 16px; align-items: center;
+  }
+  .source-card.assisted { border-left: 3px solid var(--violet); }
+  .source-card.auto { border-left: 3px solid var(--gray-400); }
+  .source-header {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 3px;
+  }
+  .source-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    font-weight: 700; padding: 2px 8px; border-radius: 100px;
+  }
+  .source-label.auto { background: var(--gray-100); color: var(--gray-600); }
+  .source-label.assisted { background: var(--violet-soft); color: var(--violet); }
+  .source-name { font-size: 14px; font-weight: 700; color: var(--ebony); letter-spacing: -0.01em; }
+  .source-desc { font-size: 12px; color: var(--gray-600); line-height: 1.5; margin: 0; }
+  .source-arrow { color: var(--gray-400); font-size: 18px; font-weight: 300; }
+  .destination-card {
+    background: var(--violet); color: white;
+    border-radius: 12px; padding: 12px 18px; text-align: center;
+    box-shadow: var(--shadow-violet);
+  }
+  .destination-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.75); font-weight: 700; margin-bottom: 3px;
+  }
+  .destination-name {
+    font-size: 14px; font-weight: 700; letter-spacing: -0.01em;
+  }
+
+  /* SCORING RESULT + TAXONOMY */
+  .score-result {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 18px 22px; margin-bottom: 12px;
+    display: grid; grid-template-columns: auto 1fr;
+    gap: 18px; align-items: center;
+  }
+  .score-result-num {
+    font-size: 44px; font-weight: 800; color: var(--violet);
+    letter-spacing: -0.04em; line-height: 0.9;
+  }
+  .score-result-num .of { color: var(--gray-400); font-weight: 700; }
+  .score-result-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--violet); font-weight: 700; margin-bottom: 3px;
+  }
+  .score-result-text {
+    font-size: 13px; color: var(--ebony); line-height: 1.45;
+  }
+  .taxonomy-panel {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .taxonomy-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .taxonomy-title {
+    font-size: 13px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.01em;
+  }
+  .taxonomy-count {
+    font-size: 11px; font-weight: 600; color: var(--violet);
+    background: var(--violet-soft); padding: 3px 9px; border-radius: 100px;
+  }
+  .taxonomy-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .taxonomy-item {
+    font-size: 11px; color: var(--gray-600); padding: 5px 8px;
+    background: var(--gray-50); border-radius: 5px; line-height: 1.3;
+  }
+
+  /* DELIVERY TWO-COLUMN */
+  .delivery-two-col {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-top: 12px;
+  }
+  .delivery-col {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 20px 22px;
+    display: flex; flex-direction: column;
+  }
+  .delivery-col-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 8px;
+  }
+  .delivery-col-title {
+    font-size: 20px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 10px;
+  }
+  .delivery-col-lead {
+    font-size: 14px; color: var(--ebony); font-weight: 600; margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .delivery-col p {
+    font-size: 13px; color: var(--gray-700); line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .delivery-col-result {
+    margin-top: auto; padding-top: 12px; border-top: 1px solid var(--gray-200);
+    font-size: 12px; color: var(--violet); font-weight: 600;
+  }
+  .delivery-footer {
+    margin-top: 16px; padding: 12px 20px;
+    background: var(--gray-50); border-radius: 8px;
+    font-size: 13px; color: var(--ebony); line-height: 1.5;
+    text-align: center;
+  }
+  .delivery-footer strong { color: var(--violet); }
+
+  /* SHOW AND TELL - ANALYSIS */
+  .st-analysis {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 22px 26px; margin-top: 14px;
+  }
+  .st-analysis-header {
+    padding-bottom: 12px; margin-bottom: 16px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .st-analysis-name {
+    font-size: 20px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.02em;
+  }
+  .st-analysis-role {
+    font-size: 12px; color: var(--gray-500); margin-top: 2px;
+  }
+  .st-stats {
+    display: flex; gap: 24px;
+  }
+  .st-stat { text-align: right; }
+  .st-stat-num {
+    font-size: 20px; font-weight: 700; color: var(--violet);
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .st-stat-label {
+    font-size: 10px; color: var(--gray-500); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+  .st-columns {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  .st-col-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 10px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--gray-200);
+  }
+  .st-subsection {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--gray-500); font-weight: 700; margin-top: 10px; margin-bottom: 5px;
+  }
+  .st-subsection:first-of-type { margin-top: 0; }
+  .st-pattern {
+    font-size: 13px; color: var(--gray-700); line-height: 1.5;
+    padding: 3px 0; padding-left: 14px; position: relative;
+    margin-bottom: 3px;
+  }
+  .st-pattern::before {
+    content: "→"; position: absolute; left: 0; color: var(--violet);
+    font-weight: 700;
+  }
+  .st-pattern strong { color: var(--ebony); }
+
+  /* DIGEST MOCK */
+  .digest-slide { padding: 36px 56px 56px; }
+  .digest-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 14px;
+  }
+  .digest-header-left h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--ebony); line-height: 1.1;
+  }
+  .digest-header-note {
+    font-size: 12px; color: var(--gray-500); font-weight: 500;
+    text-align: right;
+  }
+  .digest-mock {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 22px 28px;
+    box-shadow: var(--shadow-md);
+    max-height: 76vh; overflow-y: auto;
+  }
+  .digest-mock-header {
+    display: flex; align-items: center; gap: 12px;
+    padding-bottom: 12px; margin-bottom: 14px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .digest-mock-avatar {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--violet), var(--violet-deep));
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: white; font-weight: 700; font-size: 13px;
+  }
+  .digest-mock-sender { font-size: 13px; font-weight: 700; color: var(--ebony); }
+  .digest-mock-channel { font-size: 12px; color: var(--gray-500); }
+  .digest-mock-time { font-size: 12px; color: var(--gray-500); margin-left: auto; }
+  .digest-greeting {
+    font-size: 14px; color: var(--gray-700); line-height: 1.55;
+    margin-bottom: 10px;
+  }
+  .digest-cases {
+    background: var(--gray-50); border-radius: 8px;
+    padding: 9px 12px; margin-bottom: 16px;
+    font-size: 12px; color: var(--gray-600); line-height: 1.5;
+  }
+  .digest-cases strong { color: var(--ebony); }
+  .digest-snapshot {
+    background: var(--gray-50); border: 1px solid var(--gray-200);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;
+  }
+  .digest-snapshot-header {
+    font-size: 11px; font-weight: 700; color: var(--ebony);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .digest-snapshot-row {
+    display: grid; grid-template-columns: 78px 1fr;
+    gap: 10px; padding: 3px 0; align-items: baseline;
+  }
+  .digest-snapshot-row-label {
+    color: var(--gray-500); font-weight: 700;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .digest-snapshot-row-value {
+    color: var(--gray-700); font-size: 12px; line-height: 1.55;
+  }
+  .digest-snapshot-row-value strong { color: var(--ebony); font-weight: 600; }
+
+  /* ROLLOUT PHASES */
+  .rollout-phases {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 14px; margin-top: 24px; align-items: stretch;
+  }
+  .rollout-phase {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 20px 22px;
+    display: flex; flex-direction: column; position: relative;
+  }
+  .rollout-phase.past { background: var(--gray-50); }
+  .rollout-phase.current {
+    border: 2px solid var(--violet);
+    background: linear-gradient(180deg, var(--white) 0%, var(--violet-soft) 100%);
+    box-shadow: var(--shadow-violet);
+  }
+  .rollout-phase.future { border: 1px dashed var(--violet-line); }
+  .rollout-phase-badge {
+    font-size: 10px; font-weight: 700; color: var(--gray-500);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;
+  }
+  .rollout-phase.current .rollout-phase-badge,
+  .rollout-phase.future .rollout-phase-badge { color: var(--violet); }
+  .rollout-phase-title {
+    font-size: 17px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.02em; margin-bottom: 10px;
+  }
+  .rollout-phase-desc {
+    font-size: 12.5px; color: var(--gray-700); line-height: 1.55;
+    margin: 0; flex-grow: 1;
+  }
+  .rollout-phase.past .rollout-phase-desc { color: var(--gray-600); }
+
+  /* NEW CLOSING (bypasses .closing-slide entirely) */
+  .thanks-layout {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 60px; align-items: center; padding: 20px 0;
+  }
+  .thanks-title {
+    font-size: 72px; font-weight: 800; letter-spacing: -0.045em;
+    color: var(--ebony); line-height: 1; margin-bottom: 12px;
+  }
+  .thanks-title-accent {
+    background: linear-gradient(90deg, var(--violet), var(--violet-deep));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .thanks-questions {
+    font-size: 20px; color: var(--gray-600); font-weight: 500;
+    margin-bottom: 32px;
+  }
+  .thanks-docs {
+    padding-top: 24px; border-top: 1px solid var(--gray-200);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .thanks-docs-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--gray-500); font-weight: 700; margin-bottom: 8px;
+  }
+  .thanks-docs a {
+    color: var(--gray-700); text-decoration: none;
+    font-size: 13px; font-weight: 500; padding: 4px 0;
+    transition: color 0.2s;
+  }
+  .thanks-docs a:hover { color: var(--violet); }
+  .thanks-timeline-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 14px;
+  }
+  .thanks-timeline { position: relative; padding-left: 30px; }
+  .thanks-timeline::before {
+    content: ""; position: absolute; left: 9px; top: 8px; bottom: 8px;
+    width: 2px; background: var(--gray-200);
+  }
+  .thanks-timeline-item { position: relative; padding-bottom: 16px; }
+  .thanks-timeline-item::before {
+    content: ""; position: absolute; left: -26px; top: 6px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--gray-300); border: 2px solid var(--zircon);
+  }
+  .thanks-timeline-item.current::before { background: var(--violet); }
+  .thanks-timeline-item.milestone::before { background: var(--violet-line); }
+  .thanks-timeline-date {
+    font-size: 13px; font-weight: 700; color: var(--ebony);
+    margin-bottom: 4px;
+  }
+  .thanks-timeline-title {
+    font-size: 13px; color: var(--gray-600); line-height: 1.5;
+  }
+  .thanks-timeline-desc {
+    font-size: 12px; color: var(--gray-600); line-height: 1.5;
+    margin-top: 5px;
+  }
+  .thanks-now-marker {
+    display: inline-block; margin-left: 8px;
+    background: var(--violet); color: white;
+    font-size: 10px; font-weight: 700; padding: 2px 8px;
+    border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .digest-section-header {
+    display: inline-block;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--violet); font-weight: 700;
+    padding: 4px 12px; background: var(--violet-soft);
+    border-radius: 100px; margin-bottom: 10px;
+    margin-top: 14px;
+  }
+  .digest-section-header:first-of-type { margin-top: 0; }
+  .digest-block { margin-bottom: 12px; }
+  .digest-block:last-child { margin-bottom: 0; }
+  .digest-block-label {
+    font-size: 11px; font-weight: 700; color: var(--ebony);
+    margin-bottom: 4px; letter-spacing: -0.01em;
+  }
+  .digest-block-text {
+    font-size: 12px; color: var(--gray-700); line-height: 1.55;
+  }
+  .digest-block-text strong { color: var(--ebony); font-weight: 600; }
+  .digest-divider {
+    height: 1px; background: var(--gray-200);
+    margin: 16px 0;
+  }
+  .library-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--violet-soft); color: var(--violet);
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 100px;
+    margin-top: 4px; letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .library-tag::before {
+    content: ""; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--violet);
+  }
+  .digest-quote {
+    background: var(--gray-50); border-left: 3px solid var(--violet-line);
+    padding: 7px 12px; border-radius: 4px;
+    font-style: italic; color: var(--gray-700);
+    font-size: 12px; margin: 5px 0;
+  }
+
+  /* CONNOR EXPERIENCE - TIMELINE */
+  .exp-layout {
+    display: grid; grid-template-columns: 1.4fr 0.6fr;
+    gap: 24px; margin-top: 12px;
+  }
+  .exp-timeline {
+    display: flex; flex-direction: column; gap: 10px;
+    max-height: 68vh; overflow-y: auto; padding-right: 4px;
+  }
+  .exp-block {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 10px; padding: 12px 16px;
+    border-left: 3px solid var(--violet);
+  }
+  .exp-block-time {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 6px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .exp-block-time-label { }
+  .exp-block-time-cost {
+    color: var(--gray-500); font-weight: 500;
+    text-transform: none; letter-spacing: normal;
+    font-size: 11px;
+  }
+  .exp-item {
+    font-size: 13px; color: var(--gray-700); line-height: 1.5;
+    padding: 3px 0 3px 20px; position: relative;
+  }
+  .exp-item::before {
+    content: ""; position: absolute; left: 4px; top: 10px;
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .exp-item.human::before { background: var(--violet); }
+  .exp-item.system::before { background: var(--gray-400); }
+  .exp-item strong { color: var(--ebony); }
+  .exp-item .actor {
+    font-weight: 700; color: var(--ebony);
+  }
+  .exp-item.system .actor { color: var(--gray-600); }
+  .exp-summary {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 16px;
+    align-self: start;
+  }
+  .exp-summary-block { }
+  .exp-summary-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--gray-500); font-weight: 700; margin-bottom: 5px;
+  }
+  .exp-summary-value {
+    font-size: 26px; font-weight: 700; color: var(--violet);
+    letter-spacing: -0.02em; line-height: 1; margin-bottom: 4px;
+  }
+  .exp-summary-note {
+    font-size: 12px; color: var(--gray-600); line-height: 1.5;
+  }
+  .exp-legend {
+    display: flex; gap: 14px; margin-top: 10px;
+    font-size: 11px; color: var(--gray-500);
+  }
+  .exp-legend-item {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .exp-legend-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .exp-legend-dot.human { background: var(--violet); }
+  .exp-legend-dot.system { background: var(--gray-400); }
+
+  /* REP EXPERIENCE */
+  .rep-exp-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 24px; margin-top: 14px;
+  }
+  .rep-exp-card {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 20px 22px;
+  }
+  .rep-exp-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--gray-200);
+  }
+  .rep-slack-preview {
+    background: var(--gray-50); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 12px;
+  }
+  .rep-slack-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  }
+  .rep-slack-avatar {
+    width: 26px; height: 26px;
+    background: linear-gradient(135deg, var(--violet), var(--violet-deep));
+    border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; color: white; font-weight: 700; font-size: 12px;
+  }
+  .rep-slack-sender {
+    font-size: 12px; font-weight: 700; color: var(--ebony);
+  }
+  .rep-slack-time {
+    font-size: 11px; color: var(--gray-500); margin-left: auto;
+  }
+  .rep-slack-preview-text {
+    font-size: 12px; color: var(--gray-700); line-height: 1.5;
+  }
+  .rep-slack-preview-text strong { color: var(--ebony); }
+  .rep-inside-list {
+    list-style: none; padding: 0; margin: 8px 0 0 0;
+  }
+  .rep-inside-list li {
+    font-size: 13px; color: var(--gray-700); line-height: 1.5;
+    padding: 4px 0 4px 22px; position: relative;
+  }
+  .rep-inside-list li::before {
+    content: "✓"; position: absolute; left: 0; top: 4px;
+    color: var(--violet); font-weight: 700; font-size: 12px;
+  }
+  .rep-inside-list li strong { color: var(--ebony); }
+  .rep-next-steps {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 8px;
+  }
+  .rep-next-step {
+    background: var(--gray-50); border-radius: 8px;
+    padding: 8px 12px;
+    display: grid; grid-template-columns: 24px 1fr;
+    gap: 10px; align-items: baseline;
+  }
+  .rep-next-step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--violet); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .rep-next-step-text {
+    font-size: 12px; color: var(--gray-700); line-height: 1.45;
+  }
+  .rep-next-step-text strong { color: var(--ebony); }
+
+  /* CLOSING TIMELINE */
+  .closing-slide {
+    background: linear-gradient(135deg, var(--zircon) 0%, var(--white) 100%);
+    position: relative; overflow: hidden;
+  }
+  .closing-slide .slide-inner {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 48px; align-items: center; position: relative; z-index: 1;
+  }
+  .closing-left h1 {
+    font-size: 72px; font-weight: 800; letter-spacing: -0.045em;
+    color: var(--ebony); line-height: 1; margin-bottom: 8px;
+  }
+  .closing-left h1 .accent {
+    background: linear-gradient(90deg, var(--violet), var(--violet-deep));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .closing-questions {
+    font-size: 20px; color: var(--gray-600); font-weight: 500;
+    margin-bottom: 32px;
+  }
+  .closing-docs {
+    padding-top: 24px; border-top: 1px solid var(--gray-200);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .closing-docs-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--gray-500); font-weight: 700; margin-bottom: 8px;
+  }
+  .closing-docs a {
+    color: var(--gray-700); text-decoration: none;
+    font-size: 13px; font-weight: 500;
+    padding: 4px 0;
+    transition: all 0.2s;
+  }
+  .closing-docs a:hover { color: var(--violet); }
+  .closing-right { }
+  .closing-right-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 14px;
+  }
+  .timeline {
+    position: relative; padding-left: 30px;
+  }
+  .timeline::before {
+    content: ""; position: absolute; left: 9px; top: 8px; bottom: 8px;
+    width: 2px; background: var(--gray-200);
+  }
+  .timeline-item { position: relative; padding-bottom: 16px; }
+  .timeline-item::before {
+    content: ""; position: absolute; left: -26px; top: 6px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--zircon); border: 2px solid var(--gray-300);
+  }
+  .timeline-item.current::before {
+    background: var(--violet); border-color: var(--violet);
+    box-shadow: 0 0 0 4px var(--violet-soft);
+  }
+  .timeline-item.milestone::before {
+    background: var(--violet); border-color: var(--violet);
+  }
+  .timeline-date {
+    font-size: 11px; font-weight: 700; color: var(--violet);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;
+  }
+  .timeline-title {
+    font-size: 14px; font-weight: 600; color: var(--ebony);
+    letter-spacing: -0.02em; line-height: 1.3;
+  }
+  .now-marker {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    background: var(--violet); color: white;
+    padding: 2px 7px; border-radius: 100px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-left: 6px; vertical-align: middle;
+  }
+
+  /* Q&A STACK (deep dive) */
+  .qa-stack { display: flex; flex-direction: column; gap: 18px; }
+  .qa-block { }
+  .qa-question {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--violet); font-weight: 700; margin-bottom: 6px;
+  }
+  .qa-answer {
+    font-size: 14px; color: var(--gray-700); line-height: 1.6;
+  }
+  .qa-answer strong { color: var(--ebony); font-weight: 600; }
+
+  /* HORIZONTAL QAP LOOP */
+  .qap-loop-h {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 24px 26px;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 28px; margin-top: 12px;
+  }
+  .qap-loop-h-step { position: relative; }
+  .qap-loop-h-step:not(:last-child)::after {
+    content: "→"; position: absolute; right: -20px; top: 4px;
+    color: var(--violet); font-size: 20px; font-weight: 700;
+  }
+  .qap-loop-h-num {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--violet-soft); color: var(--violet);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; margin-bottom: 10px;
+  }
+  .qap-loop-h-title {
+    font-size: 15px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.01em; margin-bottom: 5px;
+  }
+  .qap-loop-h-desc {
+    font-size: 12px; color: var(--gray-600); line-height: 1.5;
+  }
+  .loop-intro {
+    font-size: 15px; font-weight: 600; color: var(--ebony);
+    margin-top: 18px; margin-bottom: 0;
+  }
+
+  /* Q&A paragraphs + inline example prompts */
+  .qa-answer p:not(:last-child) { margin-bottom: 10px; }
+  .qa-answer em {
+    font-style: normal; color: var(--violet-deep);
+    background: var(--violet-soft);
+    padding: 2px 8px; border-radius: 5px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12.5px; font-weight: 500;
+  }
+
+  /* Inline hyperlinks throughout */
+  .inline-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--violet-line);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    transition: text-decoration-color 0.2s;
+    font-weight: 600;
+  }
+  .inline-link:hover { text-decoration-color: var(--violet); }
+  .destination-link {
+    color: white; text-decoration: underline;
+    text-decoration-color: rgba(255,255,255,0.55);
+    text-underline-offset: 2px;
+    font-weight: inherit;
+  }
+  .destination-link:hover { text-decoration-color: white; }
+  .sources-label {
+    font-size: 11px; color: var(--gray-500); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+
+  /* SCORING FLOW visual (slide 7 right column) */
+  .scoring-flow {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 14px; padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 4px;
+    align-self: start;
+  }
+  .scoring-flow-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--gray-500); font-weight: 700; margin-bottom: 10px;
+  }
+  .scoring-flow-step {
+    padding: 12px 14px; border-radius: 10px;
+    display: flex; flex-direction: column; gap: 4px;
+    background: var(--gray-50);
+  }
+  .scoring-flow-step.prompt {
+    background: var(--violet-soft);
+    border-left: 3px solid var(--violet);
+  }
+  .scoring-flow-step-label {
+    font-size: 10px; color: var(--violet); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .scoring-flow-step-content {
+    font-size: 12px; color: var(--ebony); line-height: 1.45;
+  }
+  .scoring-flow-step-content.mono {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    color: var(--violet-deep); font-size: 12px;
+    font-weight: 500;
+  }
+  .scoring-flow-arrow {
+    text-align: center; color: var(--gray-400); font-size: 15px;
+    padding: 3px 0;
+  }
+  .scoring-flow-timing {
+    text-align: center; padding: 10px 0 2px;
+    font-size: 12px; color: var(--gray-500); font-weight: 500;
+    border-top: 1px dashed var(--gray-200); margin-top: 8px;
+  }
+  .scoring-flow-timing strong { color: var(--violet); font-weight: 700; }
+
+  /* ACCURACY GRID (new slide 8) */
+  .accuracy-intro {
+    font-size: 16px; color: var(--ebony); font-weight: 600;
+    margin-top: 4px; margin-bottom: 4px;
+  }
+  .accuracy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr 1fr;
+    gap: 16px;
+    margin-top: 18px;
+    align-items: stretch;
+  }
+  .accuracy-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 14px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+  }
+  .accuracy-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--violet); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .accuracy-card-title {
+    font-size: 17px; font-weight: 700; color: var(--ebony);
+    letter-spacing: -0.02em; margin-bottom: 10px;
+  }
+  .accuracy-card-title .inline-link { font-weight: inherit; }
+  .accuracy-desc {
+    font-size: 13px; color: var(--gray-700); line-height: 1.55;
+    margin-bottom: 14px;
+    flex-grow: 1;
+  }
+  .accuracy-desc strong { color: var(--ebony); font-weight: 600; }
+  .accuracy-visual {
+    padding-top: 14px;
+    border-top: 1px solid var(--gray-200);
+  }
+  .accuracy-visual-big-num {
+    font-size: 36px; font-weight: 800; color: var(--violet);
+    letter-spacing: -0.03em; line-height: 1;
+  }
+  .accuracy-visual-big-num .of {
+    color: var(--gray-400); font-weight: 700;
+  }
+  .accuracy-visual-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--gray-500); font-weight: 700; margin-top: 6px;
+  }
+  .accuracy-library-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--gray-500); font-weight: 700; margin-bottom: 8px;
+  }
+  .accuracy-library-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 3px;
+  }
+  .accuracy-library-item {
+    font-size: 10px; color: var(--gray-600);
+    padding: 4px 7px; background: var(--gray-50);
+    border-radius: 4px; line-height: 1.3;
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<button class="theme-toggle" id="themeToggle">◐</button>
+<div class="slide-counter"><span class="current" id="currentSlide">1</span> / <span id="totalSlides">15</span></div>
+<button class="nav-arrow prev" id="prevBtn">←</button>
+<button class="nav-arrow next" id="nextBtn">→</button>
+
+<div class="slides">
+
+  <!-- SLIDE 1: Title -->
+  <section class="slide hero-slide active">
+    <div class="hero-decor"></div>
+    <div class="hero-decor-2"></div>
+    <div class="slide-inner">
+      <div class="brand-mark">
+        <div class="brand-mark-square"></div>
+        <span class="brand-mark-text">Wrapbook</span>
+        <span class="brand-mark-divider">·</span>
+        <span class="brand-mark-date">September 15, 2026</span>
+      </div>
+      <h1 class="hero">Support QAP<br><span class="accent">Catch-Up.</span></h1>
+      <p class="hero-tagline">A briefing on the Quality Assurance Program Enablement and Support built together, launching September 17.</p>
+      <div class="hero-byline">
+        <div class="hero-byline-block">
+          <div class="hero-byline-label">Presented by</div>
+          <div class="hero-byline-name">Michael Negron</div>
+          <div class="hero-byline-role">Client Ops Enablement</div>
+        </div>
+        <div class="hero-byline-block">
+          <div class="hero-byline-label">Presented by</div>
+          <div class="hero-byline-name">Connor Rickman</div>
+          <div class="hero-byline-role">Support</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: The problem -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 01 · The problem</div>
+      <h1 class="title">Our Support team handles thousands of interactions every month. Reading quality reliably at that scale is genuinely hard.</h1>
+      <p class="lead">Our previous QAP efforts fell short structurally.</p>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <div class="problem-num">Gap 01</div>
+          <div class="problem-title">Coverage was thin</div>
+          <div class="problem-desc">Manual review only touched a fraction of cases. Most work went unseen.</div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-num">Gap 02</div>
+          <div class="problem-title">Feedback was late</div>
+          <div class="problem-desc">Manual review was so labor-intensive that coaching arrived weeks or months after the interaction.</div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-num">Gap 03</div>
+          <div class="problem-title">Coaching was inconsistent</div>
+          <div class="problem-desc">No shared standard for what "good" looked like. Coaching drifted case to case.</div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-num">Gap 04</div>
+          <div class="problem-title">Connor was grading, not coaching</div>
+          <div class="problem-desc">His hours went to scoring cases rather than developing the team.</div>
+        </div>
+        <div class="problem-card" style="grid-column: span 2;">
+          <div class="problem-num">Gap 05</div>
+          <div class="problem-title">Compliance signals were invisible</div>
+          <div class="problem-desc">Verification misses, SOP drift, and other high-stakes patterns weren't surfaced until harm had already happened.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: Why a QAP is the answer -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 02 · The answer</div>
+      <h1 class="title">A Quality Assurance Program is the right answer for this shape of problem.</h1>
+      <p class="narrative">QAPs have been standard in support for decades. The idea is simple: define what good looks like, score cases against it, turn scores into coaching, and let the loop compound. What varies dramatically between programs is execution. How much gets reviewed, how consistent the scoring is, how quickly feedback reaches reps, and whether coaching actually changes behavior.</p>
+      <p class="loop-intro">A good QAP loop looks something like this:</p>
+      <div class="qap-loop-h">
+        <div class="qap-loop-h-step">
+          <div class="qap-loop-h-num">1</div>
+          <div class="qap-loop-h-title">Review</div>
+          <div class="qap-loop-h-desc">Cases scored against a defined rubric.</div>
+        </div>
+        <div class="qap-loop-h-step">
+          <div class="qap-loop-h-num">2</div>
+          <div class="qap-loop-h-title">Learn</div>
+          <div class="qap-loop-h-desc">Patterns and gaps surface across the team.</div>
+        </div>
+        <div class="qap-loop-h-step">
+          <div class="qap-loop-h-num">3</div>
+          <div class="qap-loop-h-title">Coach</div>
+          <div class="qap-loop-h-desc">Feedback turns patterns into concrete moves.</div>
+        </div>
+        <div class="qap-loop-h-step">
+          <div class="qap-loop-h-num">4</div>
+          <div class="qap-loop-h-title">Improve</div>
+          <div class="qap-loop-h-desc">Better performance shows up in the next round.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: How QAPs typically fail -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 03 · Common failures</div>
+      <h1 class="title">Most QAPs fail in the same five ways.</h1>
+      <div class="issues-list">
+        <div class="issue-item">
+          <div class="issue-num">01</div>
+          <div class="issue-content">
+            <h4>They sample instead of covering everything.</h4>
+            <p>Manual review is expensive, so most programs only score a small percentage of cases. Reps whose cases aren't picked go unseen.</p>
+          </div>
+        </div>
+        <div class="issue-item">
+          <div class="issue-num">02</div>
+          <div class="issue-content">
+            <h4>They can't sustain the manual work.</h4>
+            <p>Even programs that start comprehensive tend to erode. Managers get pulled elsewhere and the QAP becomes something that happens only when someone remembers.</p>
+          </div>
+        </div>
+        <div class="issue-item">
+          <div class="issue-num">03</div>
+          <div class="issue-content">
+            <h4>They score inconsistently.</h4>
+            <p>When scoring depends on human judgment without shared anchors, the same case gets scored differently by different reviewers. Reps notice and lose trust in the signal.</p>
+          </div>
+        </div>
+        <div class="issue-item">
+          <div class="issue-num">04</div>
+          <div class="issue-content">
+            <h4>They coach generically.</h4>
+            <p>"You need to improve your communication" doesn't help anyone change. Without specific evidence tied to specific moments, coaching becomes noise reps learn to nod through.</p>
+          </div>
+        </div>
+        <div class="issue-item">
+          <div class="issue-num">05</div>
+          <div class="issue-content">
+            <h4>They pick a side on AI or humans.</h4>
+            <p>Pure-AI programs feel hollow and can hallucinate. Pure-human programs don't scale. The programs that work use AI for what it does well and human judgment for what only humans can do.</p>
+          </div>
+        </div>
+      </div>
+      <div class="issues-note">These are the five failure modes our program was <strong>designed from day one to avoid</strong>.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: How ours is designed to avoid failures -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 04 · Our design</div>
+      <h1 class="title">Our QAP runs as a three-phase monthly cycle, each phase designed against a specific failure.</h1>
+      <div class="phases-grid">
+        <div class="phase-card">
+          <div class="phase-num">Phase 01</div>
+          <div class="phase-title">Loading</div>
+          <div class="phase-desc">Every closed case from the month gets pulled into one place automatically. Email, chat, and phone.</div>
+          <div class="phase-what">Prevents</div>
+          <div class="phase-what-value">Thin coverage. Manual work erosion.</div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-num">Phase 02</div>
+          <div class="phase-title">Scoring</div>
+          <div class="phase-desc">Every case evaluated against one rubric with shared anchors, calibrated to Connor's judgment.</div>
+          <div class="phase-what">Prevents</div>
+          <div class="phase-what-value">Inconsistent scoring across reviewers and time.</div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-num">Phase 03</div>
+          <div class="phase-title">Delivery</div>
+          <div class="phase-desc">Scores become custom coaching per rep, drawn from real evidence and Wrapbook-specific model behaviors.</div>
+          <div class="phase-what">Prevents</div>
+          <div class="phase-what-value">Generic coaching. Feedback that's too late to matter.</div>
+        </div>
+      </div>
+      <div class="issues-note" style="margin-top: 20px;">The fifth failure — picking a side on AI or humans — is handled across the whole cycle. <strong>AI does what AI does well. Connor does what only Connor can do.</strong></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: Phase 1 Loading -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 05 · Deep Dive</div>
+      <div class="phase-hero">
+        <div class="phase-hero-badge">01</div>
+        <div class="phase-hero-name">Loading</div>
+      </div>
+      <h1 class="title">How the Loading phase works.</h1>
+      <div class="deep-layout">
+        <div class="qa-stack">
+          <div class="qa-block">
+            <div class="qa-question">What is the phase?</div>
+            <div class="qa-answer">Loading is the first step of the cycle. It brings every closed case from the prior month into one scoreable place, regardless of which channel it came through.</div>
+          </div>
+          <div class="qa-block">
+            <div class="qa-question">When does it occur?</div>
+            <div class="qa-answer">At the start of each monthly cycle.</div>
+          </div>
+          <div class="qa-block">
+            <div class="qa-question">How does it occur?</div>
+            <div class="qa-answer">
+              <p>Our QAP scores cases across phone, live chat, and email. Internal systems are already orchestrated to capture most of this, so <strong>email and chat load automatically</strong> from Salesforce into the <a class="inline-link" href="https://app.notion.com/p/c089c3d70b864835b02749dad1378712" target="_blank">Case Scores Log</a>.</p>
+              <p>Phone works differently. For calls, we built <strong>QAPIntake</strong>, an agent that parses a Zoom Contact Center CSV export, matches each call to its Salesforce case, and populates the Case Scores Log. This part is manual for now: each month, Connor exports the CSV once and drops it in QAPIntake.</p>
+            </div>
+          </div>
+        </div>
+        <div class="loading-viz">
+          <div class="sources-label">Two sources, one destination</div>
+          <div class="source-card auto">
+            <div>
+              <div class="source-header">
+                <span class="source-label auto">Automatic</span>
+                <span class="source-name">Email + Chat</span>
+              </div>
+              <p class="source-desc">Every closed case pulled from Salesforce at cycle start.</p>
+            </div>
+            <span class="source-arrow">↓</span>
+          </div>
+          <div class="source-card assisted">
+            <div>
+              <div class="source-header">
+                <span class="source-label assisted">via QAPIntake</span>
+                <span class="source-name">Phone</span>
+              </div>
+              <p class="source-desc">Every call pulled from a monthly ZCC export, linked to its Salesforce case.</p>
+            </div>
+            <span class="source-arrow">↓</span>
+          </div>
+          <div class="destination-card">
+            <div class="destination-label">All cases land in</div>
+            <div class="destination-name"><a class="destination-link" href="https://app.notion.com/p/c089c3d70b864835b02749dad1378712" target="_blank">Case Scores Log (Notion)</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: Phase 2 Scoring (mechanics) -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 06 · Deep Dive</div>
+      <div class="phase-hero">
+        <div class="phase-hero-badge">02</div>
+        <div class="phase-hero-name">Scoring</div>
+      </div>
+      <h1 class="title">How the Scoring phase works.</h1>
+      <div class="deep-layout">
+        <div class="qa-stack">
+          <div class="qa-block">
+            <div class="qa-question">What is the phase?</div>
+            <div class="qa-answer">Scoring is the second step. Every loaded case gets evaluated against our rubric, producing a full record of what happened and how well it went.</div>
+          </div>
+          <div class="qa-block">
+            <div class="qa-question">When does it occur?</div>
+            <div class="qa-answer">Right after loading completes, once Connor has confirmed the calls are in.</div>
+          </div>
+          <div class="qa-block">
+            <div class="qa-question">How does it occur?</div>
+            <div class="qa-answer">Connor switches from QAPIntake to <strong>QAPScorer</strong> in Dust with a prompt like <em>Score all September cases in the Case Scores Log.</em> QAPScorer reads each case, applies the rubric skill by skill, and writes scores plus verbatim evidence back to the <a class="inline-link" href="https://app.notion.com/p/c089c3d70b864835b02749dad1378712" target="_blank">Case Scores Log</a>. A typical cycle takes about 30 minutes to score fully.</div>
+          </div>
+        </div>
+        <div class="scoring-flow">
+          <div class="scoring-flow-label">Connor's typical run</div>
+          <div class="scoring-flow-step prompt">
+            <div class="scoring-flow-step-label">1. Connor prompts QAPScorer</div>
+            <div class="scoring-flow-step-content mono">Score all September cases in the Case Scores Log.</div>
+          </div>
+          <div class="scoring-flow-arrow">↓</div>
+          <div class="scoring-flow-step">
+            <div class="scoring-flow-step-label">2. QAPScorer processes</div>
+            <div class="scoring-flow-step-content">Reads each case, applies the rubric skill by skill, writes scores plus verbatim evidence back to the Case Scores Log.</div>
+          </div>
+          <div class="scoring-flow-arrow">↓</div>
+          <div class="scoring-flow-step">
+            <div class="scoring-flow-step-label">3. Case Scores Log updated</div>
+            <div class="scoring-flow-step-content">All cycle cases now scored, ready for Connor's calibration check.</div>
+          </div>
+          <div class="scoring-flow-timing">Runs in <strong>~30 minutes</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: Phase 2 Scoring accuracy (continuation) -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 06 · Deep Dive · Continued</div>
+      <div class="phase-hero">
+        <div class="phase-hero-badge">02</div>
+        <div class="phase-hero-name">Scoring</div>
+      </div>
+      <h1 class="title">How do we know it's accurate?</h1>
+      <p class="accuracy-intro">To make sure QAPScorer scores accurately, we did three things:</p>
+      <div class="accuracy-grid">
+        <div class="accuracy-card">
+          <div class="accuracy-num">1</div>
+          <div class="accuracy-card-title">Built a rubric.</div>
+          <div class="accuracy-desc">Clear scoring criteria with anchors for each of the 13 skills. Without shared anchors, scoring drifts case to case. With them, the same case scored twice produces the same result.</div>
+        </div>
+        <div class="accuracy-card">
+          <div class="accuracy-num">2</div>
+          <div class="accuracy-card-title">Built the <a class="inline-link" href="https://app.notion.com/p/30fae7697e5a4fefb59373ea443aa440" target="_blank">Coaching Library</a>.</div>
+          <div class="accuracy-desc">A Notion knowledge base with an entry for each of the 13 skills. Each entry defines what "good" looks like at Wrapbook Support specifically: model phrases top performers use, common pitfalls, and seven rotating coaching angles. Without this, QAPScorer would score against generic customer-service ideas. With it, we score against what our reps should be doing in our context. The same library also powers coaching in Phase 3.</div>
+          <div class="accuracy-visual">
+            <div class="accuracy-library-title">The 13 skills</div>
+            <div class="accuracy-library-grid">
+              <div class="accuracy-library-item">Clear Communication</div>
+              <div class="accuracy-library-item">Tone &amp; Language</div>
+              <div class="accuracy-library-item">Empathy &amp; Validation</div>
+              <div class="accuracy-library-item">Composure</div>
+              <div class="accuracy-library-item">Rapport</div>
+              <div class="accuracy-library-item">Diagnostic Questioning</div>
+              <div class="accuracy-library-item">Active Listening</div>
+              <div class="accuracy-library-item">Confirming &amp; Closing</div>
+              <div class="accuracy-library-item">Ownership</div>
+              <div class="accuracy-library-item">Managing Expectations</div>
+              <div class="accuracy-library-item">Proactive Service</div>
+              <div class="accuracy-library-item">Confirm Before Acting</div>
+              <div class="accuracy-library-item" style="grid-column: span 2;">Documentation Hygiene</div>
+            </div>
+          </div>
+        </div>
+        <div class="accuracy-card">
+          <div class="accuracy-num">3</div>
+          <div class="accuracy-card-title">Calibrated against Connor's judgment.</div>
+          <div class="accuracy-desc">Ran QAPScorer in shadow mode for a month while Connor scored 68 cases manually in parallel. After 3 iterations of anchor refinement, Connor now spot-checks a few cases per cycle to maintain calibration. Note: this calibrates scoring judgment. Product-knowledge fact-checking against live SOPs is on the Phase 3 roadmap.</div>
+          <div class="accuracy-visual">
+            <div class="accuracy-visual-big-num">63<span class="of">/68</span></div>
+            <div class="accuracy-visual-label">cases matched Connor's judgment</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: Phase 3 Delivery with two-column PK vs SS -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 07 · Deep Dive</div>
+      <div class="phase-hero">
+        <div class="phase-hero-badge">03</div>
+        <div class="phase-hero-name">Delivery</div>
+      </div>
+      <h1 class="title">How the Delivery phase works.</h1>
+      <div class="qa-stack" style="margin-bottom: 20px;">
+        <div class="qa-block">
+          <div class="qa-question">What is the phase?</div>
+          <div class="qa-answer">Delivery is the final step. All scoring is done, so <strong>QAPDigest</strong> takes the raw scores and spins them into personalized coaching each rep will respond to, plus a team summary for the manager.</div>
+        </div>
+        <div class="qa-block">
+          <div class="qa-question">When does it occur?</div>
+          <div class="qa-answer">After scoring completes and Connor confirms calibration.</div>
+        </div>
+        <div class="qa-block">
+          <div class="qa-question">How does it occur?</div>
+          <div class="qa-answer">Connor triggers QAPDigest in Dust. For each rep, it drafts a coaching digest in a <strong>six-block structure per skill area</strong>: strengths from the cycle, the largest opportunity, model behavior to work toward, what continuing the current pattern looks like, a measurable next-cycle behavior, and a mentor-style closing on why this matters for their work. Coaching pulls from two distinct sources depending on what's being coached (detailed below). Connor reviews every draft in the <a class="inline-link" href="https://app.notion.com/p/7b7d6ce467af41e4af8293a9d205198e" target="_blank">Digest Log</a>; approved digests fire as Slack DMs.</div>
+        </div>
+      </div>
+      <div class="delivery-two-col">
+        <div class="delivery-col">
+          <div class="delivery-col-label">For Product Knowledge</div>
+          <div class="delivery-col-title">Grounded in the SOP itself.</div>
+          <div class="delivery-col-lead">Coaching comes from our documented processes, not general knowledge.</div>
+          <p><strong>QAPDigest</strong> pulls the model behavior from the current SOP for that specific skill. It quotes what the rep actually did, then points to the exact places to learn more: the SOP page in Notion, the Wrapbook Help Center article, the relevant WorkRamp course.</p>
+          <p>Every reference is a fresh search each cycle, so nothing goes stale.</p>
+          <div class="delivery-col-result">Result: reps see exactly what to do and where to learn more.</div>
+        </div>
+        <div class="delivery-col">
+          <div class="delivery-col-label">For Soft Skills</div>
+          <div class="delivery-col-title">Grounded in real customer moments.</div>
+          <div class="delivery-col-lead">Coaching comes from what actually happened, not what should have happened in theory.</div>
+          <p>QAPDigest quotes the rep's exact language, quotes how the customer responded, and pulls model phrases the top performers on the team use in similar moments (anonymized).</p>
+          <p>Coaching ties directly to real Wrapbook situations: high-emotion payment issues, time-sensitive union deadlines, first-time production coordinators, line producers under financial pressure.</p>
+          <div class="delivery-col-result">Result: reps learn the principle behind the behavior, not just the rule.</div>
+        </div>
+      </div>
+      <div class="delivery-footer"><strong>Connor reviews every draft</strong> before anything reaches a rep. Once approved, the digest fires as a Slack DM.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: Example - Analysis -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 08 · A real example</div>
+      <h1 class="title">Let's look at August for one rep.</h1>
+      <p class="lead">For this example, we scored Sam McLean's August work. Here's what we reviewed and what we found. On the next slide, the digest QAPDigest actually produced.</p>
+      <div class="digest-snapshot" style="max-width: 920px; margin-top: 12px;">
+        <div class="digest-snapshot-header">📊 What we reviewed and what we found</div>
+        <div class="digest-snapshot-row">
+          <div class="digest-snapshot-row-label">Rep</div>
+          <div class="digest-snapshot-row-value">Sam McLean · CSS II</div>
+        </div>
+        <div class="digest-snapshot-row">
+          <div class="digest-snapshot-row-label">Cases</div>
+          <div class="digest-snapshot-row-value">8 reviewed across email (4) and phone via QAPIntake (4). 6 scored, 2 unscored under the no-interaction rule.</div>
+        </div>
+        <div class="digest-snapshot-row">
+          <div class="digest-snapshot-row-label">Overall</div>
+          <div class="digest-snapshot-row-value"><strong>9.8/10</strong> partial-credit average. Zero compliance flags.</div>
+        </div>
+        <div class="digest-snapshot-row">
+          <div class="digest-snapshot-row-label">Findings</div>
+          <div class="digest-snapshot-row-value">Sam handled underlying customer problems accurately and stayed steady through payment, access, and account questions. Two coaching opportunities emerged: <strong>Managing Expectations</strong> (dependency timing specificity, on email case 974092) and <strong>Confirming Understanding and Closing</strong> (three-part close on the Aug 20 phone case).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: Example - Delivered Digest -->
+  <section class="slide digest-slide">
+    <div class="slide-inner">
+      <div class="digest-header">
+        <div class="digest-header-left">
+          <div class="eyebrow" style="margin-bottom: 10px;">Section 08 · What Sam actually received</div>
+          <h1>Here's the digest QAPDigest actually produced.</h1>
+        </div>
+        <div class="digest-header-note">Real August output · <a class="inline-link" href="https://app.notion.com/p/3dcfdd08fcdc819d9accd63575eac8ea" target="_blank">View full page in Notion</a><br><span style="color: var(--violet); font-weight: 600;">[PREVIEW] Sam McLean — August 2026</span></div>
+      </div>
+      <div class="digest-mock">
+        <div class="digest-mock-header">
+          <div class="digest-mock-avatar">Q</div>
+          <div>
+            <div class="digest-mock-sender">QAPDigest</div>
+            <div class="digest-mock-channel">Direct message to Sam</div>
+          </div>
+          <div class="digest-mock-time">Sep 1, 9:04 AM</div>
+        </div>
+        <div class="digest-greeting">Sam, I reviewed your August work across email and phone. Based on a smaller sample this month, the clearest pattern is that you handled the underlying customer problem accurately and stayed steady through payment, access, and account questions.</div>
+        <div class="digest-cases"><strong>Cases reviewed:</strong> 8 total (4 email, 4 phone). Aug 14, 18, 20, 25 phone; four email cases across the month.</div>
+        <div class="digest-snapshot">
+          <div class="digest-snapshot-header">📊 Review snapshot</div>
+          <div class="digest-snapshot-row">
+            <div class="digest-snapshot-row-label">Overall</div>
+            <div class="digest-snapshot-row-value"><strong>9.8/10</strong> (smaller sample this month)</div>
+          </div>
+          <div class="digest-snapshot-row">
+            <div class="digest-snapshot-row-label">Scoring</div>
+            <div class="digest-snapshot-row-value">Each case is graded on multiple criteria. Partial success on multi-step tasks earns partial points. A perfect 10 means every criterion nailed on every case.</div>
+          </div>
+          <div class="digest-snapshot-row">
+            <div class="digest-snapshot-row-label">Basis</div>
+            <div class="digest-snapshot-row-value">6 scored cases out of 8 reviewed. 2 unscored under the no-interaction rule.</div>
+          </div>
+          <div class="digest-snapshot-row">
+            <div class="digest-snapshot-row-label">Notes</div>
+            <div class="digest-snapshot-row-value">Perfect email cases 974092, 974301, and 968436, plus 3 phone cases that resolved the customer's needs. The only partial credit came from unavailable SLA fields under the manual-transcript exception on the phone cases, so those scores carry low confidence.</div>
+          </div>
+          <div class="digest-snapshot-row">
+            <div class="digest-snapshot-row-label">Flags</div>
+            <div class="digest-snapshot-row-value">0 compliance flags</div>
+          </div>
+        </div>
+
+        <div class="digest-section-header">Product Knowledge</div>
+        <div class="digest-block">
+          <div class="digest-block-label">Where you're doing excellent</div>
+          <div class="digest-block-text">Sam, you showed strong payment-reissue workflow knowledge in case 974301, where you wrote:</div>
+          <div class="digest-quote">"I have reissued them to direct deposit."</div>
+          <div class="digest-block-text">You had already reviewed the payment history, confirmed the direct-deposit update, and completed the correct void-and-reissue path. That combination matters when a production coordinator is waiting on payroll to move and needs a clear answer rather than another handoff.</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">Your largest opportunity right now</div>
+          <div class="digest-block-text">The forward-looking product knowledge opportunity is making the reissue dependency and timing equally specific. In case 974092, you wrote:</div>
+          <div class="digest-quote">"Once confirmed, we will proceed with the reissue right away."</div>
+          <div class="digest-block-text">The dependency is clear, but "right away" leaves the customer without a usable window.</div>
+          <div class="library-tag">Library: Managing Expectations</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">What good looks like here</div>
+          <div class="digest-block-text">Keep the same accurate precondition and add a customer-facing window:</div>
+          <div class="digest-quote">"Here's what to expect: once the banking update is confirmed, I'll submit the reissue by [specific time]. If anything changes, I'll message you before then."</div>
+          <div class="digest-block-text" style="font-size: 11px; color: var(--gray-500); margin-top: 6px;">Reference: 📋 Check Returns (SOP) · Request a void and reissue of a worker payment (Help Center)</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">What keeping the current pattern looks like</div>
+          <div class="digest-block-text">The work can be technically correct while the customer still has to chase for timing. A line producer under financial pressure may update a worker's bank information, hear "right away," and then have no clear point when the reissue should appear or when Support will update them.</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">How we'll know it's sticking</div>
+          <div class="digest-block-text">In the next cycle, every substantive payment-reissue reply should include the required dependency, a specific time or window for the next action, and a proactive-update trigger if that window changes.</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">Why this matters for your work</div>
+          <div class="digest-block-text">You already do the hard product work of finding the payment history and applying the correct reissue path. Adding a precise customer-time commitment will make that expertise easier to trust during payroll-critical moments, especially when a production team is working toward a shoot or union deadline.</div>
+        </div>
+
+        <div class="digest-divider"></div>
+
+        <div class="digest-section-header">Soft Skills</div>
+        <div class="digest-block">
+          <div class="digest-block-label">Where you're doing excellent</div>
+          <div class="digest-block-text">You consistently stayed with customers through complicated fixes and closed with a real outcome. In case 974301, you wrote "I have reissued them to direct deposit," and the customer replied:</div>
+          <div class="digest-quote">"Thank you so much for your help."</div>
+          <div class="digest-block-text">The customer's response shows the action landed clearly and your ownership carried through to resolution.</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">Your largest opportunity right now</div>
+          <div class="digest-block-text">The useful stretch is turning a successful fix into a more explicit three-part close on phone cases. On the Aug 20 phone case, you ended with:</div>
+          <div class="digest-quote">"if you have any more problems, feel free to give us a call back."</div>
+          <div class="digest-block-text">That is warm, but broad.</div>
+          <div class="library-tag">Library: Confirming Understanding &amp; Closing</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">What good looks like here</div>
+          <div class="digest-block-text">Use the library's three-part move:</div>
+          <div class="digest-quote">"To recap: we reset the password and completed MFA, you're back in the account, and if the login issue returns, call us back. Sound good?"</div>
+          <div class="digest-block-text">Another team member modeled the specific reopen invite:</div>
+          <div class="digest-quote">"let me know, though, if anything goes wrong with that check ... glad to see that you got it and everything's gonna work out."</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">What keeping the current pattern looks like</div>
+          <div class="digest-block-text">A broad "call us back" close can leave a customer unsure whether Support is still watching the issue or whether they must start over. In a time-sensitive payment case, that ambiguity can turn a correct fix into a reopen.</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">How we'll know it's sticking</div>
+          <div class="digest-block-text">In the next cycle, use a three-part recap plus one direct confirmation question in every substantive phone interaction that reaches a fix. The review check is simple: the call ending contains the action taken, the next step or timing, and the specific trigger for coming back.</div>
+        </div>
+        <div class="digest-block">
+          <div class="digest-block-label">Why this matters for your work</div>
+          <div class="digest-block-text">Your phone work shows patience, accurate diagnosis, and steady ownership. A more deliberate close will help customers leave a payment, onboarding, or access call knowing exactly what changed and what to do next, which makes your strong resolution work easier for the customer to carry forward.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: Connor's experience -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 09 · Connor's experience</div>
+      <h1 class="title">Let's follow Connor through an October cycle.</h1>
+      <div class="exp-layout">
+        <div class="exp-timeline">
+          <div class="exp-block">
+            <div class="exp-block-time"><span class="exp-block-time-label">Oct 1 · Morning</span><span class="exp-block-time-cost">Connor: 5 min</span></div>
+            <div class="exp-item human"><span class="actor">Connor</span> exports Recording_logs.csv from Zoom Contact Center for September dates.</div>
+            <div class="exp-item human"><span class="actor">Connor</span> opens Dust and drops the CSV in a QAPIntake conversation.</div>
+            <div class="exp-item system"><span class="actor">QAPIntake</span> parses every call, matches ~90% to Salesforce cases, populates the Case Scores Log, flags unmatched rows.</div>
+            <div class="exp-item system"><span class="actor">In the background</span> email and chat cases are already loaded, ingested automatically from Salesforce all month.</div>
+          </div>
+          <div class="exp-block">
+            <div class="exp-block-time"><span class="exp-block-time-label">Oct 1 · Mid-morning</span><span class="exp-block-time-cost">Connor: 10 min</span></div>
+            <div class="exp-item human"><span class="actor">Connor</span> reviews the handful of unmatched phone rows and confirms the correct Salesforce case for each.</div>
+            <div class="exp-item human"><span class="actor">Connor</span> triggers QAPScorer to score the cycle.</div>
+            <div class="exp-item system"><span class="actor">QAPScorer</span> reads every case, applies the rubric, writes scores and verbatim evidence to the Case Scores Log.</div>
+          </div>
+          <div class="exp-block">
+            <div class="exp-block-time"><span class="exp-block-time-label">Oct 2 · Morning</span><span class="exp-block-time-cost">Connor: 15 min</span></div>
+            <div class="exp-item human"><span class="actor">Connor</span> spot-checks 5 scored cases for calibration confidence.</div>
+            <div class="exp-item human"><span class="actor">Connor</span> triggers QAPDigest to draft.</div>
+            <div class="exp-item system"><span class="actor">QAPDigest</span> for each rep: fetches scores, Coaching Library entries, prior digest history. Searches Notion for SOPs, web-searches the Wrapbook Help Center, finds WorkRamp courses. Drafts one digest per rep plus the manager summary. Creates draft pages in the Digest Log.</div>
+          </div>
+          <div class="exp-block">
+            <div class="exp-block-time"><span class="exp-block-time-label">Oct 3–5</span><span class="exp-block-time-cost">Connor: 2 hours</span></div>
+            <div class="exp-item human"><span class="actor">Connor</span> reads each draft in Notion. Approves, edits, or requests revisions via Notion comments.</div>
+            <div class="exp-item system"><span class="actor">QAPDigest</span> rewrites any requested revisions and preserves Connor's original notes.</div>
+          </div>
+          <div class="exp-block">
+            <div class="exp-block-time"><span class="exp-block-time-label">Oct 5 · End of day</span><span class="exp-block-time-cost">Connor: 1 min</span></div>
+            <div class="exp-item human"><span class="actor">Connor</span> tells QAPDigest "send approved digests for September."</div>
+            <div class="exp-item system"><span class="actor">QAPDigest</span> fires each approved digest as a Slack DM to the rep, and sends the team summary to Connor.</div>
+          </div>
+        </div>
+        <div class="exp-summary">
+          <div class="exp-summary-block">
+            <div class="exp-summary-label">Connor's total time</div>
+            <div class="exp-summary-value">~2.5 hrs</div>
+            <div class="exp-summary-note">Across a week. Most of it in review, not creation.</div>
+          </div>
+          <div class="exp-summary-block">
+            <div class="exp-summary-label">Before this program</div>
+            <div class="exp-summary-value">15+ hrs</div>
+            <div class="exp-summary-note">Per month, grading manually and only sampling a fraction of cases.</div>
+          </div>
+          <div class="exp-legend">
+            <div class="exp-legend-item"><div class="exp-legend-dot human"></div>Connor</div>
+            <div class="exp-legend-item"><div class="exp-legend-dot system"></div>The system</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: Rep's experience -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 10 · The rep's experience</div>
+      <h1 class="title">What Sam actually receives.</h1>
+      <p class="lead">One Slack DM. Warm, specific, coach-y. Read in 5–7 minutes. Actionable in the next cycle.</p>
+      <div class="rep-exp-grid">
+        <div class="rep-exp-card">
+          <div class="rep-exp-title">What arrives</div>
+          <div class="rep-slack-preview">
+            <div class="rep-slack-header">
+              <div class="rep-slack-avatar">Q</div>
+              <div class="rep-slack-sender">QAPDigest</div>
+              <div class="rep-slack-time">Sep 30, 9:04 AM</div>
+            </div>
+            <div class="rep-slack-preview-text"><strong>Hey Sam!</strong> Here's what we scored for your September QAP review...</div>
+          </div>
+          <div style="font-size: 12px; color: var(--gray-500); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Inside the message</div>
+          <ul class="rep-inside-list">
+            <li>A warm greeting by first name</li>
+            <li><strong>Cases reviewed this month</strong>, linked directly</li>
+            <li><strong>Product Knowledge</strong> section (6 blocks) with real SOP, Help Center, and WorkRamp references</li>
+            <li><strong>Soft Skills</strong> section (6 blocks) with an anonymized top-performer quote as the model</li>
+            <li>Every claim tied to a specific case with a real verbatim quote</li>
+            <li>A "Why this matters for your work" closing on each section</li>
+          </ul>
+        </div>
+        <div class="rep-exp-card">
+          <div class="rep-exp-title">What the rep does with it</div>
+          <div class="rep-next-steps">
+            <div class="rep-next-step">
+              <div class="rep-next-step-num">1</div>
+              <div class="rep-next-step-text"><strong>Reads it</strong> on mobile or desktop. Format works on both.</div>
+            </div>
+            <div class="rep-next-step">
+              <div class="rep-next-step-num">2</div>
+              <div class="rep-next-step-text"><strong>Screenshots</strong> the "what good looks like" blocks for reference in the next cycle.</div>
+            </div>
+            <div class="rep-next-step">
+              <div class="rep-next-step-num">3</div>
+              <div class="rep-next-step-text"><strong>Opens the linked SOP or Help Center article</strong> if they want to go deeper on a specific gap.</div>
+            </div>
+            <div class="rep-next-step">
+              <div class="rep-next-step-num">4</div>
+              <div class="rep-next-step-text"><strong>Comments on the Notion page</strong> if they disagree or need context. Connor sees the comment directly.</div>
+            </div>
+            <div class="rep-next-step">
+              <div class="rep-next-step-num">5</div>
+              <div class="rep-next-step-text"><strong>Takes the coaching into the next cycle.</strong></div>
+            </div>
+          </div>
+          <div style="margin-top: 14px; padding: 10px 14px; background: var(--violet-soft); border-radius: 8px; font-size: 12px; color: var(--ebony); line-height: 1.5;">
+            <strong style="color: var(--violet);">Next month, growth leads.</strong> If a previously-flagged skill now scores well, QAPDigest opens with that — named specifically, with a real quote from a case this cycle. Meaningful improvement (even if not yet perfect) gets its own recognition. Sustained excellence across multiple cycles gets called out too. Growth first, coaching second. Rotation prevents the same coaching angle twice within three cycles.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 14: How we got here (rollout phases) -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Section 11 · How we got here</div>
+      <h1 class="title">This wasn't the first version.</h1>
+      <p class="lead">A phased rollout, tested against reality at each step. Every phase had to earn the next.</p>
+      <div class="rollout-phases">
+        <div class="rollout-phase past">
+          <div class="rollout-phase-badge">01 · Complete</div>
+          <div class="rollout-phase-title">Calibration</div>
+          <div class="rollout-phase-desc">Shadow mode for a month. QAPScorer scored 68 cases while Connor scored the same 68 in parallel. 3 iterations of anchor refinement. Ended with 63 of 68 matching Connor's judgment.</div>
+        </div>
+        <div class="rollout-phase past">
+          <div class="rollout-phase-badge">02 · Complete</div>
+          <div class="rollout-phase-title">Shadow delivery</div>
+          <div class="rollout-phase-desc">QAPDigest drafted real coaching digests but they weren't sent to reps. Connor and I reviewed drafts side-by-side to catch tone issues, factual gaps, and structural problems. Fixed the biggest ones before any real coaching reached anyone.</div>
+        </div>
+        <div class="rollout-phase current">
+          <div class="rollout-phase-badge">03 · Now · Sept 17</div>
+          <div class="rollout-phase-title">Supervised (Phase 2)</div>
+          <div class="rollout-phase-desc">Real digests flow to reps via Slack. Connor reviews every draft in the Digest Log before it's sent. Full human control, agent doing the heavy drafting. This is where we are today.</div>
+        </div>
+        <div class="rollout-phase future">
+          <div class="rollout-phase-badge">04 · Target · November</div>
+          <div class="rollout-phase-title">Fully autonomous (Phase 3)</div>
+          <div class="rollout-phase-desc">Approved digest structure ships without per-digest review. Connor shifts to spot-checking cases and maintaining the Coaching Library. Contingent on the Nov 2 go/no-go decision.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 15: Closing + timeline (rebuilt without .closing-slide class) -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="thanks-layout">
+        <div>
+          <h1 class="thanks-title">Thank <span class="thanks-title-accent">you.</span></h1>
+          <p class="thanks-questions">Questions?</p>
+          <div class="thanks-docs">
+            <div class="thanks-docs-label">Full documentation in Notion</div>
+            <a href="https://app.notion.com/p/3d8fdd08fcdc81d1a65af4378f131cc6" target="_blank">The Support QAP — How the program works</a>
+            <a href="https://app.notion.com/p/3d8fdd08fcdc81caa44ceca5fadf666d" target="_blank">The Support QAP — For reps</a>
+            <a href="https://app.notion.com/p/3d8fdd08fcdc81478590cfcde3049f4e" target="_blank">The Support QAP — For managers</a>
+            <a href="https://app.notion.com/p/3d8fdd08fcdc817cb0ecfb0260f162b3" target="_blank">The Support QAP — Phase 2 operating playbook</a>
+          </div>
+        </div>
+        <div>
+          <div class="thanks-timeline-label">The next eight weeks</div>
+          <div class="thanks-timeline">
+            <div class="thanks-timeline-item current">
+              <div class="thanks-timeline-date">Sept 17-19 <span class="thanks-now-marker">Launching</span></div>
+              <div class="thanks-timeline-title">Cycle 1 scoring</div>
+              <div class="thanks-timeline-desc">Connor exports the August ZCC CSV to QAPIntake, then triggers QAPScorer. Every closed August case (email, chat, phone) scored against the rubric. Connor spot-checks a few for calibration.</div>
+            </div>
+            <div class="thanks-timeline-item milestone">
+              <div class="thanks-timeline-date">Sept 22-25</div>
+              <div class="thanks-timeline-title">Cycle 1 review + first delivery</div>
+              <div class="thanks-timeline-desc">QAPDigest drafts 10 rep digests plus a manager summary. Connor reviews each and marks approved, needs revision, or rejected. On Sept 25 he triggers send; approved digests fire as Slack DMs. First coaching reaches reps.</div>
+            </div>
+            <div class="thanks-timeline-item milestone">
+              <div class="thanks-timeline-date">Oct 6-15</div>
+              <div class="thanks-timeline-title">Cycle 2 (coaches September work)</div>
+              <div class="thanks-timeline-desc">Same rhythm shifted. Scoring Oct 6-8, drafting Oct 12, review Oct 12-14, send Oct 15. Two full cycles complete before the gate.</div>
+            </div>
+            <div class="thanks-timeline-item milestone">
+              <div class="thanks-timeline-date">Oct 30 - Nov 2</div>
+              <div class="thanks-timeline-title">Phase 2 exit gate</div>
+              <div class="thanks-timeline-desc">Michael and Connor review both cycles on Oct 30. Four criteria: 95%+ digests approved without revision, every compliance flag handled cleanly, every dispute resolved, Connor trusts the output. Formal go/no-go on Nov 2.</div>
+            </div>
+            <div class="thanks-timeline-item">
+              <div class="thanks-timeline-date">Nov 6+</div>
+              <div class="thanks-timeline-title">Phase 3 begins (if go)</div>
+              <div class="thanks-timeline-desc">Autonomous cycles. Approved digests ship without per-digest review. Connor shifts to spot-checks and Coaching Library maintenance. Product Knowledge fact-checking against the T/T Guide comes online.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="dots" id="dots"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const currentSlideEl = document.getElementById('currentSlide');
+  const totalSlidesEl = document.getElementById('totalSlides');
+  const progressEl = document.getElementById('progress');
+  const dotsEl = document.getElementById('dots');
+  const themeToggle = document.getElementById('themeToggle');
+
+  totalSlidesEl.textContent = totalSlides;
+
+  for (let i = 0; i < totalSlides; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goToSlide(i));
+    dotsEl.appendChild(dot);
+  }
+  const dots = document.querySelectorAll('.dot');
+
+  function goToSlide(n) {
+    slides[currentSlide].classList.remove('active');
+    dots[currentSlide].classList.remove('active');
+    currentSlide = Math.max(0, Math.min(n, totalSlides - 1));
+    slides[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active');
+    currentSlideEl.textContent = currentSlide + 1;
+    progressEl.style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+    prevBtn.disabled = currentSlide === 0;
+    nextBtn.disabled = currentSlide === totalSlides - 1;
+    slides[currentSlide].scrollTop = 0;
+  }
+
+  prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+  nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); goToSlide(currentSlide + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goToSlide(currentSlide - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); goToSlide(0); }
+    else if (e.key === 'End') { e.preventDefault(); goToSlide(totalSlides - 1); }
+  });
+
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  });
+
+  goToSlide(0);
+</script>
+
+</body>
+</html>
