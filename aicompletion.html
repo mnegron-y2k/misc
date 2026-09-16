@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Level 1 · Client Ops AI Certification — Completion Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --bg:#F4F6F8; --surface:#FFFFFF; --ink:#152230; --muted:#586675; --faint:#8494A2;
+  --line:#E5EAEE; --line-strong:#D0D8DE;
+  --nav:#122236; --nav-2:#0D1A29; --nav-line:rgba(255,255,255,.10); --nav-fill:#1E3450;
+  --on-nav:#EAF1F8; --on-nav-mut:#93A7BC;
+  --done:#0E8A57; --done-bg:#E4F2EB; --done-line:#BEE3CE; --done-on:#39CE8E;
+  --prog:#BE7A0E; --prog-bg:#FAF0DB; --prog-line:#EFD6A8; --prog-on:#F1B24C;
+  --idle:#77828F; --idle-bg:#EBEFF2; --idle-line:#D7DDE2; --idle-on:#98ABBD;
+  --shadow:0 1px 2px rgba(21,34,48,.05),0 1px 1px rgba(21,34,48,.04);
+  --shadow-lg:0 8px 30px rgba(18,34,54,.16);
+  --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --disp:"Fraunces","Iowan Old Style",Georgia,"Times New Roman",serif;
+  font-family:var(--sans);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.wrap{max-width:1020px;margin:0 auto;padding:22px 20px 90px}
+
+.mast{background:linear-gradient(160deg,var(--nav) 0%,var(--nav-2) 100%);border-radius:18px;padding:26px 30px 30px;color:var(--on-nav);box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
+.mast::after{content:"";position:absolute;right:-120px;top:-120px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(57,206,142,.10),transparent 62%);pointer-events:none}
+.mast-top{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start;position:relative}
+.eyebrow{color:var(--on-nav-mut);font-size:12.5px;font-weight:600;letter-spacing:.02em}
+h1{font-family:var(--disp);font-weight:600;font-size:31px;line-height:1.08;letter-spacing:-.01em;margin:6px 0 0;color:#fff}
+.stamp{background:rgba(255,255,255,.06);border:1px solid var(--nav-line);border-radius:11px;padding:9px 13px}
+.stamp .lbl{display:flex;align-items:center;gap:7px;color:var(--on-nav-mut);font-size:11px;font-weight:600}
+.stamp .dot{width:7px;height:7px;border-radius:50%;background:var(--done-on);box-shadow:0 0 0 3px rgba(57,206,142,.18)}
+.stamp .val{font-size:13px;font-weight:600;margin-top:3px;color:#fff}
+.stamp .note{font-size:10.5px;color:var(--on-nav-mut);margin-top:2px}
+
+.switch{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:22px;position:relative}
+.switch-lbl{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px;color:#fff}
+.switch-lbl svg{opacity:.8}
+.switch select{font:inherit;font-size:14px;font-weight:500;padding:9px 34px 9px 13px;border-radius:9px;border:1px solid var(--nav-line);background:var(--nav-fill);color:#fff;cursor:pointer;min-width:238px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23cdd' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.switch select:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.switch option{color:#152230}
+.tgl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--on-nav-mut);cursor:pointer;user-select:none}
+.tgl input{width:15px;height:15px;accent-color:var(--done-on);cursor:pointer}
+.tgl.off{opacity:.4;cursor:default}
+.scope{margin-left:auto;display:flex;align-items:center;gap:10px}
+.scope-txt{font-size:12.5px;color:var(--on-nav-mut)}
+.scope-txt b{color:#fff;font-weight:600}
+.clr{background:rgba(255,255,255,.12);border:none;color:#fff;font:inherit;font-size:12px;padding:6px 11px;border-radius:7px;cursor:pointer}
+.clr:hover{background:rgba(255,255,255,.22)}
+.clr:focus-visible{outline:2px solid #fff;outline-offset:1px}
+
+.hero{display:flex;flex-wrap:wrap;align-items:center;gap:30px 46px;margin-top:26px;position:relative}
+.ringwrap{position:relative;width:158px;height:158px;flex:0 0 auto}
+.ring{width:158px;height:158px;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:rgba(255,255,255,.09);stroke-width:15}
+.seg{fill:none;stroke-width:15;stroke-linecap:butt;transition:stroke-dasharray .9s cubic-bezier(.22,.61,.36,1)}
+.seg-done{stroke:var(--done-on)} .seg-prog{stroke:var(--prog-on)} .seg-idle{stroke:var(--idle-on)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-center .pct{font-family:var(--disp);font-weight:600;font-size:46px;line-height:1;color:#fff;letter-spacing:-.02em}
+.ring-center .cap{font-size:11px;color:var(--on-nav-mut);font-weight:600;margin-top:3px}
+
+.momentum{display:flex;flex-direction:column;gap:3px}
+.mrow{display:flex;align-items:center;gap:13px;padding:7px 12px;border-radius:10px;cursor:pointer;transition:background .12s;border:none;background:transparent;text-align:left;font:inherit;color:inherit}
+.mrow:hover{background:rgba(255,255,255,.05)}
+.mrow.active{background:rgba(255,255,255,.09)}
+.mrow:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.mrow .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+.mrow .num{font-family:var(--disp);font-weight:600;font-size:26px;color:#fff;min-width:42px}
+.mrow .mlbl{font-size:13.5px;color:var(--on-nav-mut)}
+.deadline{margin-left:8px;padding-left:26px;border-left:1px solid var(--nav-line);display:flex;flex-direction:column;justify-content:center}
+.deadline .dnum{font-family:var(--disp);font-weight:600;font-size:30px;color:#fff;line-height:1}
+.deadline .dcap{font-size:12px;color:var(--on-nav-mut);margin-top:4px;line-height:1.35}
+@media (max-width:640px){.deadline{margin-left:0;padding-left:0;border-left:none}}
+
+.controls{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;gap:11px;align-items:center;margin:0 -20px;padding:14px 20px;background:var(--bg);border-bottom:1px solid var(--line)}
+.controls.stuck{box-shadow:0 6px 16px rgba(18,34,54,.07)}
+.search{position:relative;flex:1 1 240px;min-width:180px}
+.search input{width:100%;padding:10px 12px 10px 37px;font:inherit;font-size:14px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);color:var(--ink)}
+.search input:focus{outline:2px solid var(--nav);outline-offset:1px;border-color:var(--nav)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.seg-ctl{display:flex;gap:5px;background:#E7ECF0;padding:4px;border-radius:10px}
+.seg-ctl button{font:inherit;font-size:13px;font-weight:500;border:none;background:transparent;color:var(--muted);padding:7px 12px;border-radius:7px;cursor:pointer;white-space:nowrap}
+.seg-ctl button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
+.seg-ctl button:focus-visible{outline:2px solid var(--nav);outline-offset:1px}
+.sortsel{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:13px}
+.sortsel select{font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer}
+.sortsel select:focus-visible{outline:2px solid var(--nav);outline-offset:1px}
+.countline{color:var(--faint);font-size:12.5px;margin:16px 2px 12px}
+
+.group{margin-bottom:11px}
+.group-head{width:100%;display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);font:inherit;text-align:left;color:var(--ink)}
+.group-head:focus-visible{outline:2px solid var(--nav);outline-offset:1px}
+.chev{transition:transform .18s ease;color:var(--faint);flex:0 0 auto}
+.group.open>.group-head .chev{transform:rotate(90deg)}
+.gbadge{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.gtitle{font-weight:600;font-size:15px}
+.gcount{color:var(--muted);font-weight:500;font-size:13px}
+.gmini{margin-left:auto;display:flex;align-items:center;gap:10px;min-width:150px}
+.gmini .track{flex:1;height:6px;border-radius:4px;background:#EBEFF2;overflow:hidden}
+.gmini .fill{display:block;height:100%;border-radius:4px}
+.gmini .share{font-size:12.5px;color:var(--muted);min-width:34px;text-align:right;font-weight:500}
+.members{display:none}
+.group.open>.members{display:block;padding:5px 0 2px}
+
+.flat{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.person{border-bottom:1px solid var(--line)}
+.person:last-child{border-bottom:none}
+.flat .person{border-left:3px solid transparent}
+.flat .person.st-done{border-left-color:var(--done)}
+.flat .person.st-prog{border-left-color:var(--prog)}
+.flat .person.st-idle{border-left-color:var(--idle)}
+.person-head{width:100%;display:flex;align-items:center;gap:12px;padding:10px 15px;cursor:pointer;background:transparent;border:none;font:inherit;text-align:left;color:var(--ink)}
+.members .person-head{padding-left:20px}
+.person-head:hover{background:#FAFBFC}
+.person-head:focus-visible{outline:2px solid var(--nav);outline-offset:-2px}
+.avatar{width:30px;height:30px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:#51637A;background:#E9EEF3;letter-spacing:.02em}
+.pinfo{display:flex;flex-direction:column;min-width:0}
+.person-name{font-weight:500;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person-mgr{color:var(--faint);font-size:12px}
+.pill{font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
+.pill.done{color:var(--done);background:var(--done-bg);border-color:var(--done-line)}
+.pill.prog{color:var(--prog);background:var(--prog-bg);border-color:var(--prog-line)}
+.pill.idle{color:var(--idle);background:var(--idle-bg);border-color:var(--idle-line)}
+.modmini{margin-left:auto;display:flex;align-items:center;gap:9px;min-width:104px}
+.modmini .track{width:60px;height:6px;border-radius:4px;background:#EBEFF2;overflow:hidden}
+.modmini .fill{display:block;height:100%;background:var(--idle);border-radius:4px}
+.modmini.p1 .fill{background:var(--prog)}
+.modmini.done .fill{background:var(--done)}
+.modmini .lbl{font-size:12px;color:var(--muted);white-space:nowrap}
+.person-head .chev{margin-left:2px}
+.detail{display:none;padding:2px 16px 18px 57px}
+.person.open .detail{display:block}
+.person.open>.person-head .chev{transform:rotate(90deg)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:2px 26px;background:#FCFDFE;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.field{padding:6px 0}
+.field .fk{color:var(--faint);font-size:11px;font-weight:600}
+.field .fv{font-size:14px;margin-top:2px}
+.field .na{color:var(--faint)}
+.ok{color:var(--done);font-weight:600}
+.empty{text-align:center;color:var(--muted);padding:46px 20px;background:var(--surface);border:1px dashed var(--line-strong);border-radius:12px}
+.empty b{color:var(--ink);display:block;margin-bottom:4px;font-size:15px}
+footer{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12px;line-height:1.65}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="mast">
+    <div class="mast-top">
+      <div>
+        <div class="eyebrow">Client Operations AI Certification</div>
+        <h1>Level 1 Completion Tracker</h1>
+      </div>
+      <div class="stamp" role="status">
+        <div class="lbl"><span class="dot"></span> Data current as of</div>
+        <div class="val" id="stampVal"></div>
+        <div class="note">Static snapshot, not live</div>
+      </div>
+    </div>
+
+    <div class="switch">
+      <span class="switch-lbl">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Show my team
+      </span>
+      <select id="teamSel" aria-label="Choose a manager"></select>
+      <label class="tgl off" id="directWrap"><input type="checkbox" id="directOnly" disabled> Direct reports only</label>
+      <span class="scope"><span class="scope-txt" id="scopeText"></span><button class="clr" id="clearTeam" style="display:none">Clear</button></span>
+    </div>
+
+    <div class="hero">
+      <div class="ringwrap">
+        <svg class="ring" viewBox="0 0 158 158">
+          <circle class="ring-track" cx="79" cy="79" r="63"></circle>
+          <circle class="seg seg-done" id="segDone" cx="79" cy="79" r="63"></circle>
+          <circle class="seg seg-prog" id="segProg" cx="79" cy="79" r="63"></circle>
+          <circle class="seg seg-idle" id="segIdle" cx="79" cy="79" r="63"></circle>
+        </svg>
+        <div class="ring-center"><span class="pct" id="heroPct">0%</span><span class="cap">certified</span></div>
+      </div>
+      <div class="momentum" id="momentum"></div>
+      <div class="deadline"><span class="dnum" id="daysNum"></span><span class="dcap" id="daysCap"></span></div>
+    </div>
+  </div>
+
+  <div class="controls" id="controls">
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="text" placeholder="Search name or email" aria-label="Search people">
+    </div>
+    <div class="seg-ctl" role="group" aria-label="Filter by status">
+      <button data-f="all" aria-pressed="true">All</button>
+      <button data-f="Completed" aria-pressed="false">Completed</button>
+      <button data-f="In Progress" aria-pressed="false">In progress</button>
+      <button data-f="Not Started" aria-pressed="false">Not started</button>
+    </div>
+    <div class="seg-ctl" role="group" aria-label="View">
+      <button data-v="grouped" aria-pressed="true">Grouped</button>
+      <button data-v="list" aria-pressed="false">List</button>
+    </div>
+    <div class="sortsel">
+      <label for="sort">Sort</label>
+      <select id="sort">
+        <option value="name">Name A–Z</option>
+        <option value="modules">Modules done</option>
+        <option value="recent">Last active</option>
+        <option value="grade">Grade</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="countline" id="countline"></div>
+  <div id="list"></div>
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const CFG = {"records": [{"name": "Abigail Best", "email": "abigail.best@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 95, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Stephanie Cave", "chain": ["Stephanie Cave", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Adam Darragh", "email": "adam@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 86, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Christian Gunston", "chain": ["Christian Gunston", "Jill Rose", "Ali Javid"]}, {"name": "Adam Taylor", "email": "adam.taylor@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 91, "passed": true, "dateCompleted": "Sep 8, 2026 · 5:36 PM", "onTime": true, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Alexa Keane", "email": "alexa.keane@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 96, "passed": true, "dateCompleted": "Sep 8, 2026 · 10:54 PM", "onTime": true, "timeSpent": "48 min", "firstAccessed": "Jun 26, 2026 · 1:42 PM", "lastAccessed": "Sep 8, 2026 · 11:00 PM", "manager": "Meghan Catucci", "chain": ["Meghan Catucci", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Amber Moore", "email": "amoore@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Laura McCarthy", "chain": ["Laura McCarthy", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Arreen Garner", "email": "agarner@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 95, "passed": true, "dateCompleted": "Sep 11, 2026 · 9:30 PM", "onTime": true, "timeSpent": "47 min", "firstAccessed": "Jun 23, 2026 · 8:41 PM", "lastAccessed": "Sep 11, 2026 · 9:32 PM", "manager": "Laura McCarthy", "chain": ["Laura McCarthy", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Ash Winbush", "email": "awinbush@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 94, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Ashley Reilly", "email": "asreilly@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Meghan Catucci", "chain": ["Meghan Catucci", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Audrey Lazaro", "email": "alazaro@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 90, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Barb Lund", "email": "blund@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Renee Sadono", "chain": ["Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Bee Castruita", "email": "bcastruita@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Lo Martin", "chain": ["Lo Martin", "Jill Rose", "Ali Javid"]}, {"name": "Bianca Finkelstein", "email": "bfinkelstein@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Jun 23, 2026 · 10:58 PM", "lastAccessed": "Jul 13, 2026 · 2:16 AM", "manager": "Laura McCarthy", "chain": ["Laura McCarthy", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Brian Petersen", "email": "bpetersen@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Rachel Gordon", "chain": ["Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Cameron Riley", "email": "criley@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Jul 16, 2026 · 3:56 PM", "lastAccessed": "Jul 17, 2026 · 2:54 AM", "manager": "Brian Petersen", "chain": ["Brian Petersen", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Candy Sce", "email": "csce@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 92, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Hazel Garganera", "chain": ["Hazel Garganera", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Casey Emfinger", "email": "cemfinger@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 94, "passed": true, "dateCompleted": "Sep 14, 2026 · 4:39 PM", "onTime": true, "timeSpent": "22h 46m", "firstAccessed": "Jul 6, 2026 · 6:14 PM", "lastAccessed": "Sep 14, 2026 · 4:39 PM", "manager": "Meghan Catucci", "chain": ["Meghan Catucci", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Casey Hopkins", "email": "chopkins@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Dominick Allen", "chain": ["Dominick Allen", "Sam Cornblath", "Jill Rose", "Ali Javid"]}, {"name": "Catalina Vizcarra", "email": "cvizcarra@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 97, "passed": true, "dateCompleted": "Sep 9, 2026 · 11:24 PM", "onTime": true, "timeSpent": "57 min", "firstAccessed": "Jul 7, 2026 · 11:41 PM", "lastAccessed": "Sep 9, 2026 · 11:44 PM", "manager": "Hazel Garganera", "chain": ["Hazel Garganera", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Chanelle Davis", "email": "cdavis@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 100, "passed": true, "dateCompleted": "Sep 9, 2026 · 2:27 PM", "onTime": true, "timeSpent": "54 min", "firstAccessed": "Jun 23, 2026 · 5:31 PM", "lastAccessed": "Sep 9, 2026 · 2:37 PM", "manager": "Jason Stuckey", "chain": ["Jason Stuckey", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Chris Winston", "email": "cwinston@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 94, "passed": true, "dateCompleted": "Sep 10, 2026 · 6:08 PM", "onTime": true, "timeSpent": "28 min", "firstAccessed": "Jun 30, 2026 · 5:17 PM", "lastAccessed": "Sep 10, 2026 · 6:09 PM", "manager": "Genesis Dunn", "chain": ["Genesis Dunn", "Jill Rose", "Ali Javid"]}, {"name": "Christian Gunston", "email": "cgunston@wrapbook.com", "status": "In Progress", "done": 0, "total": 4, "grade": null, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Aug 26, 2026 · 7:25 PM", "lastAccessed": "", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Christine Colindres", "email": "ccolindres@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Laura McCarthy", "chain": ["Laura McCarthy", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Connor Rickman", "email": "crickman@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 95, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Rachel Gordon", "chain": ["Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Cookie Hardy", "email": "rhardy@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jess Ryan", "chain": ["Jess Ryan", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Criselda Catindig", "email": "ccatindig@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Cristina Castanon", "email": "cristina.castanon@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Jul 14, 2026 · 1:01 AM", "lastAccessed": "Jul 17, 2026 · 2:02 AM", "manager": "Christian Gunston", "chain": ["Christian Gunston", "Jill Rose", "Ali Javid"]}, {"name": "Daniel Ringer", "email": "dringer@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 94, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Jul 8, 2026 · 5:14 PM", "lastAccessed": "Sep 15, 2026 · 11:00 PM", "manager": "Lo Martin", "chain": ["Lo Martin", "Jill Rose", "Ali Javid"]}, {"name": "Daniel Su", "email": "dsu@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 93, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Renee Sadono", "chain": ["Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Danielle Dougherty", "email": "ddougherty@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 96, "passed": true, "dateCompleted": "Sep 11, 2026 · 5:33 PM", "onTime": true, "timeSpent": "28h 42m", "firstAccessed": "Jul 8, 2026 · 8:11 PM", "lastAccessed": "Sep 11, 2026 · 5:52 PM", "manager": "Genesis Dunn", "chain": ["Genesis Dunn", "Jill Rose", "Ali Javid"]}, {"name": "Danyelle Feeley", "email": "dfeeley@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 95, "passed": true, "dateCompleted": "Sep 15, 2026 · 8:54 PM", "onTime": true, "timeSpent": "38 min", "firstAccessed": "Jul 8, 2026 · 6:09 PM", "lastAccessed": "Sep 15, 2026 · 9:07 PM", "manager": "Lo Martin", "chain": ["Lo Martin", "Jill Rose", "Ali Javid"]}, {"name": "David Guglielmi", "email": "dguglielmi@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 94, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "David Valentino", "email": "dvalentino@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Aug 26, 2026 · 7:25 PM", "lastAccessed": "May 21, 2026 · 11:25 PM", "manager": "Kevin Prince", "chain": ["Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Dee Velez", "email": "dvelez@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Hazel Garganera", "chain": ["Hazel Garganera", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Devin Clay", "email": "dclay@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "5h 12m", "firstAccessed": "", "lastAccessed": "", "manager": "Jason Stuckey", "chain": ["Jason Stuckey", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Diana Warshavsky", "email": "dwarshavsky@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 94, "passed": true, "dateCompleted": "Sep 11, 2026 · 3:38 PM", "onTime": true, "timeSpent": "40 min", "firstAccessed": "Jul 2, 2026 · 9:03 PM", "lastAccessed": "Sep 11, 2026 · 3:47 PM", "manager": "Meghan Catucci", "chain": ["Meghan Catucci", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Diego Ortega", "email": "diego.ortega@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 95, "passed": true, "dateCompleted": "Sep 11, 2026 · 7:34 PM", "onTime": true, "timeSpent": "11h 46m", "firstAccessed": "Sep 8, 2026 · 5:36 PM", "lastAccessed": "Sep 11, 2026 · 7:34 PM", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Dominick Allen", "email": "dallen@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 98, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Sam Cornblath", "chain": ["Sam Cornblath", "Jill Rose", "Ali Javid"]}, {"name": "Dominick Della Valle", "email": "ddellavalle@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 95, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Gareth Williams", "email": "gareth.williams@wrapbook.com", "status": "Not Started", "done": 0, "total": 4, "grade": null, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Sep 8, 2026 · 5:36 PM", "lastAccessed": "", "manager": "Christian Gunston", "chain": ["Christian Gunston", "Jill Rose", "Ali Javid"]}, {"name": "Genesis Dunn", "email": "gdunn@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 98, "passed": true, "dateCompleted": "Sep 14, 2026 · 3:46 PM", "onTime": true, "timeSpent": "43 min", "firstAccessed": "Jul 7, 2026 · 5:23 PM", "lastAccessed": "Sep 14, 2026 · 3:58 PM", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Haide Callejas", "email": "hcallejas@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 86, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jess Ryan", "chain": ["Jess Ryan", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Hannah Snow", "email": "hsnow@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Genesis Dunn", "chain": ["Genesis Dunn", "Jill Rose", "Ali Javid"]}, {"name": "Hazel Garganera", "email": "hgarganera@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 99, "passed": true, "dateCompleted": "Sep 12, 2026 · 2:05 AM", "onTime": true, "timeSpent": "1h 4m", "firstAccessed": "Jun 25, 2026 · 10:00 PM", "lastAccessed": "Sep 12, 2026 · 2:08 AM", "manager": "Renee Sadono", "chain": ["Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Hillary Kidwell", "email": "hkidwell@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 95, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Renee Sadono", "chain": ["Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Izzy Poirier", "email": "izzy.poirier@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 98, "passed": true, "dateCompleted": "Sep 9, 2026 · 4:05 PM", "onTime": true, "timeSpent": "1h 12m", "firstAccessed": "Jun 12, 2026 · 7:14 PM", "lastAccessed": "Sep 9, 2026 · 4:05 PM", "manager": "Jacob Dailey", "chain": ["Jacob Dailey", "Jill Rose", "Ali Javid"]}, {"name": "Jacob Dailey", "email": "jdailey@wrapbook.com", "status": "In Progress", "done": 3, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Janee Antwine", "email": "jantwine@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 97, "passed": true, "dateCompleted": "Sep 11, 2026 · 2:25 AM", "onTime": true, "timeSpent": "1h 59m", "firstAccessed": "Jul 2, 2026 · 7:44 PM", "lastAccessed": "Sep 11, 2026 · 2:26 AM", "manager": "Hazel Garganera", "chain": ["Hazel Garganera", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Jason Stuckey", "email": "jstuckey@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Kevin Prince", "chain": ["Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Jazmynne Pratt", "email": "jazmynne.pratt@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Jeannine Russo", "email": "jrusso@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 93, "passed": true, "dateCompleted": "Sep 13, 2026 · 11:08 PM", "onTime": true, "timeSpent": "1h 54m", "firstAccessed": "Jun 28, 2026 · 8:49 PM", "lastAccessed": "Sep 13, 2026 · 11:37 PM", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Jeffrey Marquez", "email": "jmarquez@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 98, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Michael Negron", "chain": ["Michael Negron", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Jeffrey Martin", "email": "jmartin@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 96, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Genesis Dunn", "chain": ["Genesis Dunn", "Jill Rose", "Ali Javid"]}, {"name": "Jenny Soriano", "email": "jsoriano@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 93, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Jess Ryan", "email": "jryan@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Renee Sadono", "chain": ["Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Jill Rose", "email": "jrose@wrapbook.com", "status": "Not Started", "done": 0, "total": 4, "grade": null, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Ali Javid", "chain": ["Ali Javid"]}, {"name": "Jinny Guzman Lorenzana", "email": "jguzmanlorenzana@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 94, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "16h 13m", "firstAccessed": "Jun 23, 2026 · 5:31 PM", "lastAccessed": "Sep 10, 2026 · 7:57 PM", "manager": "Jason Stuckey", "chain": ["Jason Stuckey", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Jo Ingram", "email": "jingram@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 93, "passed": true, "dateCompleted": "Sep 15, 2026 · 10:37 PM", "onTime": true, "timeSpent": "2h 27m", "firstAccessed": "Jul 14, 2026 · 3:08 PM", "lastAccessed": "Sep 16, 2026 · 12:45 PM", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Joel Chung", "email": "jchung@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 98, "passed": true, "dateCompleted": "Sep 8, 2026 · 8:21 PM", "onTime": true, "timeSpent": "9 min", "firstAccessed": "Jun 23, 2026 · 10:31 PM", "lastAccessed": "Sep 8, 2026 · 8:22 PM", "manager": "Jess Ryan", "chain": ["Jess Ryan", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "John La", "email": "jla@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 99, "passed": true, "dateCompleted": "Sep 9, 2026 · 10:29 PM", "onTime": true, "timeSpent": "1h 14m", "firstAccessed": "Jun 23, 2026 · 5:31 PM", "lastAccessed": "Sep 9, 2026 · 11:05 PM", "manager": "Jason Stuckey", "chain": ["Jason Stuckey", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Joseph Hudon", "email": "jhudon@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 94, "passed": true, "dateCompleted": "Sep 8, 2026 · 5:36 PM", "onTime": true, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Laura McCarthy", "chain": ["Laura McCarthy", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Judy Santana", "email": "jsantana@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 94, "passed": true, "dateCompleted": "Sep 8, 2026 · 11:20 PM", "onTime": true, "timeSpent": "57 min", "firstAccessed": "Jun 23, 2026 · 6:40 PM", "lastAccessed": "Sep 8, 2026 · 11:33 PM", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Julian Winkler", "email": "julian.winkler@wrapbook.com", "status": "In Progress", "done": 0, "total": 4, "grade": 96, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "1h 11m", "firstAccessed": "Sep 15, 2026 · 9:26 PM", "lastAccessed": "Sep 15, 2026 · 10:52 PM", "manager": "Jacob Dailey", "chain": ["Jacob Dailey", "Jill Rose", "Ali Javid"]}, {"name": "Justin Lumague", "email": "jlumague@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 97, "passed": true, "dateCompleted": "Sep 8, 2026 · 9:02 PM", "onTime": true, "timeSpent": "32 min", "firstAccessed": "Jun 25, 2026 · 10:18 PM", "lastAccessed": "Sep 8, 2026 · 9:23 PM", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Kate LaChapelle-Gustafson", "email": "klachapelle@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 96, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Kaylen Sidhu", "email": "ksidhu@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jacob Dailey", "chain": ["Jacob Dailey", "Jill Rose", "Ali Javid"]}, {"name": "Kevin Prince", "email": "kevin@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Kristen Phraner", "email": "kphraner@wrapbook.com", "status": "In Progress", "done": 0, "total": 4, "grade": null, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Christian Gunston", "chain": ["Christian Gunston", "Jill Rose", "Ali Javid"]}, {"name": "Kristina Mata", "email": "kristina.mata@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Genesis Dunn", "chain": ["Genesis Dunn", "Jill Rose", "Ali Javid"]}, {"name": "Laura McCarthy", "email": "lmccarthy@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "David Valentino", "chain": ["David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "LeChelle Jones", "email": "ljones@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 93, "passed": true, "dateCompleted": "Sep 15, 2026 · 6:20 PM", "onTime": true, "timeSpent": "1h 21m", "firstAccessed": "Jun 26, 2026 · 11:00 PM", "lastAccessed": "Sep 15, 2026 · 6:21 PM", "manager": "Meghan Catucci", "chain": ["Meghan Catucci", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Lila Nawrocki", "email": "lila@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 100, "passed": true, "dateCompleted": "Sep 8, 2026 · 5:36 PM", "onTime": true, "timeSpent": "58 min", "firstAccessed": "Jun 23, 2026 · 5:31 PM", "lastAccessed": "Sep 3, 2026 · 2:59 PM", "manager": "Jason Stuckey", "chain": ["Jason Stuckey", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Lo Martin", "email": "lmartin@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 95, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Lon Huber", "email": "lhuber@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "19h 14m", "firstAccessed": "May 1, 2026 · 9:12 PM", "lastAccessed": "Sep 15, 2026 · 11:33 PM", "manager": "Paul Schoeman", "chain": ["Paul Schoeman", "Jill Rose", "Ali Javid"]}, {"name": "Maggie Adams", "email": "madams@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 98, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Marc Longberg", "email": "mlongberg@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 97, "passed": true, "dateCompleted": "Sep 9, 2026 · 10:29 PM", "onTime": true, "timeSpent": "29h 25m", "firstAccessed": "Jun 23, 2026 · 5:31 PM", "lastAccessed": "Sep 9, 2026 · 11:04 PM", "manager": "Jason Stuckey", "chain": ["Jason Stuckey", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Mark Morales", "email": "mark.morales@wrapbook.com", "status": "In Progress", "done": 0, "total": 4, "grade": 92, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Aug 14, 2026 · 2:31 PM", "lastAccessed": "Sep 16, 2026 · 2:55 PM", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Matthew Pelrine", "email": "matthew.pelrine@wrapbook.com", "status": "Not Started", "done": 0, "total": 4, "grade": null, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Christian Gunston", "chain": ["Christian Gunston", "Jill Rose", "Ali Javid"]}, {"name": "Me'Lana Mathis-Irvin", "email": "melana.irvin@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 96, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jess Ryan", "chain": ["Jess Ryan", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Meghan Catucci", "email": "mcatucci@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 98, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "David Valentino", "chain": ["David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Michael Chim", "email": "mchim@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Stephanie Cave", "chain": ["Stephanie Cave", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Michael Negron", "email": "mnegron@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 115, "passed": true, "dateCompleted": "Sep 9, 2026 · 5:16 PM", "onTime": true, "timeSpent": "3h 20m", "firstAccessed": "Jun 18, 2026 · 4:29 PM", "lastAccessed": "Sep 9, 2026 · 5:16 PM", "manager": "Rachel Gordon", "chain": ["Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Nataly Kincaid", "email": "nkincaid@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 98, "passed": true, "dateCompleted": "Sep 9, 2026 · 4:39 PM", "onTime": true, "timeSpent": "22h 31m", "firstAccessed": "Jul 8, 2026 · 7:19 PM", "lastAccessed": "Sep 9, 2026 · 4:20 PM", "manager": "Genesis Dunn", "chain": ["Genesis Dunn", "Jill Rose", "Ali Javid"]}, {"name": "Nia Bentham", "email": "nbentham@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 95, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Brian Petersen", "chain": ["Brian Petersen", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Patrick Delaney", "email": "pdelaney@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "42h 7m", "firstAccessed": "Aug 26, 2026 · 7:25 PM", "lastAccessed": "Sep 10, 2026 · 5:17 PM", "manager": "Paul Schoeman", "chain": ["Paul Schoeman", "Jill Rose", "Ali Javid"]}, {"name": "Paul Schoeman", "email": "pschoeman@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 126, "passed": true, "dateCompleted": "Sep 8, 2026 · 7:01 PM", "onTime": true, "timeSpent": "39 min", "firstAccessed": "Jun 23, 2026 · 5:29 PM", "lastAccessed": "Sep 8, 2026 · 6:26 PM", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Rachel Czipo", "email": "rachel.czipo@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 100, "passed": true, "dateCompleted": "Sep 10, 2026 · 2:01 PM", "onTime": true, "timeSpent": "41 min", "firstAccessed": "Aug 6, 2026 · 3:17 PM", "lastAccessed": "Sep 10, 2026 · 2:09 PM", "manager": "Sam Cornblath", "chain": ["Sam Cornblath", "Jill Rose", "Ali Javid"]}, {"name": "Rachel Gordon", "email": "rgordon@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Kevin Prince", "chain": ["Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Rae Gibson", "email": "rgibson@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 92, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jess Ryan", "chain": ["Jess Ryan", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Remy Saint-Satyr", "email": "rsaintsatyr@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 95, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Renee Sadono", "chain": ["Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Renee Sadono", "email": "rsadono@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 92, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Sam Cornblath", "email": "sam.cornblath@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 98, "passed": true, "dateCompleted": "Sep 10, 2026 · 4:13 PM", "onTime": true, "timeSpent": "40 min", "firstAccessed": "Jul 8, 2026 · 4:25 PM", "lastAccessed": "Sep 10, 2026 · 4:15 PM", "manager": "Jill Rose", "chain": ["Jill Rose", "Ali Javid"]}, {"name": "Sam McLean", "email": "smclean@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 93, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Sarah Tinjaca", "email": "stinjaca@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 95, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Lo Martin", "chain": ["Lo Martin", "Jill Rose", "Ali Javid"]}, {"name": "Shannon Swanson", "email": "sswanson@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "25h 50m", "firstAccessed": "Jun 25, 2026 · 8:26 PM", "lastAccessed": "Sep 10, 2026 · 6:09 PM", "manager": "Meghan Catucci", "chain": ["Meghan Catucci", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Shawna Wood", "email": "swood@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 95, "passed": true, "dateCompleted": "Sep 10, 2026 · 2:23 PM", "onTime": true, "timeSpent": "38 min", "firstAccessed": "Jul 8, 2026 · 5:24 PM", "lastAccessed": "Sep 10, 2026 · 2:24 PM", "manager": "Renee Sadono", "chain": ["Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Stella Perez", "email": "sperez@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 90, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Stephanie Cave", "chain": ["Stephanie Cave", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Stephanie Cave", "email": "stcave@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "Jul 27, 2026 · 7:22 PM", "lastAccessed": "Jul 28, 2026 · 6:10 PM", "manager": "David Valentino", "chain": ["David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Stephanie Yasenchok", "email": "syasenchok@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 93, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Laura McCarthy", "chain": ["Laura McCarthy", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Steve Dayan", "email": "sdayan@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 92, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Paul Schoeman", "chain": ["Paul Schoeman", "Jill Rose", "Ali Javid"]}, {"name": "Susan Murphy", "email": "smurphy@wrapbook.com", "status": "In Progress", "done": 1, "total": 4, "grade": 100, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Dominick Della Valle", "chain": ["Dominick Della Valle", "Jill Rose", "Ali Javid"]}, {"name": "Susana Hernandez", "email": "shernandez@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 98, "passed": true, "dateCompleted": "Sep 9, 2026 · 3:50 PM", "onTime": true, "timeSpent": "30 min", "firstAccessed": "Jun 23, 2026 · 11:30 PM", "lastAccessed": "Sep 9, 2026 · 3:51 PM", "manager": "Renee Sadono", "chain": ["Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Talisa Pulido", "email": "tpulido@wrapbook.com", "status": "In Progress", "done": 0, "total": 4, "grade": null, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Christian Gunston", "chain": ["Christian Gunston", "Jill Rose", "Ali Javid"]}, {"name": "Tasha Hewett", "email": "thewett@wrapbook.com", "status": "In Progress", "done": 3, "total": 4, "grade": 98, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "33 min", "firstAccessed": "Jun 24, 2026 · 5:35 PM", "lastAccessed": "Sep 15, 2026 · 8:27 PM", "manager": "Brian Petersen", "chain": ["Brian Petersen", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Tathiana Franco", "email": "tathiana.franco@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Meghan Catucci", "chain": ["Meghan Catucci", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Tim Murphy", "email": "tim@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 96, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Hazel Garganera", "chain": ["Hazel Garganera", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Tito Ekundayo", "email": "tekundayo@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 93, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Meghan Catucci", "chain": ["Meghan Catucci", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Tracy Kinder", "email": "tkinder@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 92, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "38 min", "firstAccessed": "Jul 15, 2026 · 5:45 PM", "lastAccessed": "Sep 9, 2026 · 8:01 PM", "manager": "Jess Ryan", "chain": ["Jess Ryan", "Renee Sadono", "Jill Rose", "Ali Javid"]}, {"name": "Vanessa Garcia", "email": "vanessa.garcia@wrapbook.com", "status": "Not Started", "done": 0, "total": 4, "grade": null, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Vaneza Orellana", "email": "vaneza.orellana@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 97, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "25 min", "firstAccessed": "Jul 9, 2026 · 10:23 PM", "lastAccessed": "Sep 10, 2026 · 10:59 PM", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Will Schoen", "email": "will.schoen@wrapbook.com", "status": "In Progress", "done": 2, "total": 4, "grade": 92, "passed": false, "dateCompleted": "", "onTime": false, "timeSpent": "0 min", "firstAccessed": "", "lastAccessed": "", "manager": "Stephanie Cave", "chain": ["Stephanie Cave", "David Valentino", "Kevin Prince", "Jill Rose", "Ali Javid"]}, {"name": "Zeev Feldman", "email": "zfeldman@wrapbook.com", "status": "Completed", "done": 4, "total": 4, "grade": 96, "passed": true, "dateCompleted": "Sep 15, 2026 · 5:46 PM", "onTime": true, "timeSpent": "6h 52m", "firstAccessed": "Jul 9, 2026 · 6:08 PM", "lastAccessed": "Sep 15, 2026 · 5:47 PM", "manager": "Connor Rickman", "chain": ["Connor Rickman", "Rachel Gordon", "Kevin Prince", "Jill Rose", "Ali Javid"]}], "managers": [{"name": "Brian Petersen", "org": 3, "direct": 3}, {"name": "Christian Gunston", "org": 6, "direct": 6}, {"name": "Connor Rickman", "org": 10, "direct": 10}, {"name": "David Valentino", "org": 21, "direct": 3}, {"name": "Dominick Allen", "org": 1, "direct": 1}, {"name": "Dominick Della Valle", "org": 10, "direct": 10}, {"name": "Genesis Dunn", "org": 6, "direct": 6}, {"name": "Hazel Garganera", "org": 5, "direct": 5}, {"name": "Jacob Dailey", "org": 3, "direct": 3}, {"name": "Jason Stuckey", "org": 6, "direct": 6}, {"name": "Jess Ryan", "org": 6, "direct": 6}, {"name": "Jill Rose", "org": 110, "direct": 9}, {"name": "Kevin Prince", "org": 47, "direct": 3}, {"name": "Laura McCarthy", "org": 6, "direct": 6}, {"name": "Lo Martin", "org": 4, "direct": 4}, {"name": "Meghan Catucci", "org": 8, "direct": 8}, {"name": "Michael Negron", "org": 1, "direct": 1}, {"name": "Paul Schoeman", "org": 3, "direct": 3}, {"name": "Rachel Gordon", "org": 17, "direct": 3}, {"name": "Renee Sadono", "org": 19, "direct": 8}, {"name": "Sam Cornblath", "org": 3, "direct": 2}, {"name": "Stephanie Cave", "org": 4, "direct": 4}], "total": 111, "stamp": "11:30 AM ET · Wednesday, September 16, 2026", "due": "Sep 30, 2026", "daysLeft": 14};
+
+const DATA=CFG.records;
+const SM={"Completed":{cls:"done",badge:"var(--done)"},"In Progress":{cls:"prog",badge:"var(--prog)"},"Not Started":{cls:"idle",badge:"var(--idle)"}};
+const lab=s=>s==="In Progress"?"In progress":(s==="Not Started"?"Not started":"Completed");
+let state={team:"all",direct:false,q:"",filter:"all",sort:"name",view:"grouped"};
+let firstPaint=true;
+const $=id=>document.getElementById(id);
+const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+$("stampVal").textContent=CFG.stamp;
+$("daysNum").textContent=CFG.daysLeft;
+$("daysCap").innerHTML="days left<br>until "+CFG.due;
+$("footer").innerHTML='Source: WorkRamp export &ldquo;Level 1 - Client Ops AI Certification&rdquo;, joined to the Wrapbook directory for reporting lines. Snapshot taken '+CFG.stamp+'.<br>Team views roll up a manager&rsquo;s full downstream org by default; turn on &ldquo;Direct reports only&rdquo; for just their immediate reports.';
+
+(function(){const s=$("teamSel");const o=document.createElement("option");o.value="all";o.textContent="Everyone · "+CFG.total+" people";s.appendChild(o);
+ CFG.managers.forEach(m=>{const x=document.createElement("option");x.value=m.name;x.textContent=m.name+" · "+m.org+(m.org===1?" person":" people");s.appendChild(x);});})();
+
+function inScope(r){if(state.team==="all")return true;if(state.direct)return r.manager===state.team;return r.chain.includes(state.team);}
+function scoped(){return DATA.filter(inScope);}
+function matches(r){if(state.filter!=="all"&&r.status!==state.filter)return false;if(state.q&&!(r.name+" "+r.email).toLowerCase().includes(state.q))return false;return true;}
+function sortR(a){const n=x=>x.name.toLowerCase();a=[...a];
+ if(state.sort==="name")a.sort((x,y)=>n(x)<n(y)?-1:1);
+ else if(state.sort==="modules")a.sort((x,y)=>(y.done/y.total)-(x.done/x.total)||(n(x)<n(y)?-1:1));
+ else if(state.sort==="grade")a.sort((x,y)=>(y.grade??-1)-(x.grade??-1)||(n(x)<n(y)?-1:1));
+ else if(state.sort==="recent")a.sort((x,y)=>(y.lastAccessed||"").localeCompare(x.lastAccessed||"")||(n(x)<n(y)?-1:1));
+ return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function chev(){return '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>'}
+function na(){return '<span class="na">—</span>'}
+function fld(k,v){return '<div class="field"><div class="fk">'+k+'</div><div class="fv">'+v+'</div></div>'}
+function initials(n){const p=n.trim().split(/\s+/);return ((p[0]&&p[0][0]||'')+(p.length>1?p[p.length-1][0]:'')).toUpperCase();}
+
+const C=2*Math.PI*63;
+function setRing(c,p,n,tot){
+ const a1=tot?C*c/tot:0,a2=tot?C*p/tot:0,a3=tot?C*n/tot:0;
+ $("segDone").style.strokeDasharray=a1+" "+(C-a1);$("segDone").style.strokeDashoffset=0;
+ $("segProg").style.strokeDasharray=a2+" "+(C-a2);$("segProg").style.strokeDashoffset=-a1;
+ $("segIdle").style.strokeDasharray=a3+" "+(C-a3);$("segIdle").style.strokeDashoffset=-(a1+a2);
+}
+function countUp(el,to){if(reduce){el.textContent=to+"%";return;}let s=null;const dur=750;
+ function step(t){if(!s)s=t;const k=Math.min((t-s)/dur,1);el.textContent=Math.round(k*to)+"%";if(k<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+
+function renderHero(sc){
+ const tot=sc.length,c=sc.filter(r=>r.status==="Completed").length,p=sc.filter(r=>r.status==="In Progress").length,n=sc.filter(r=>r.status==="Not Started").length;
+ const pct=tot?Math.round(c/tot*100):0;
+ if(firstPaint){countUp($("heroPct"),pct);}else{$("heroPct").textContent=pct+"%";}
+ if(firstPaint&&!reduce){setRing(0,0,0,tot||1);requestAnimationFrame(()=>requestAnimationFrame(()=>setRing(c,p,n,tot)));}
+ else{setRing(c,p,n,tot);}
+ const items=[["Completed","var(--done-on)",c,"Completed"],["In Progress","var(--prog-on)",p,"In progress"],["Not Started","var(--idle-on)",n,"Not started"]];
+ $("momentum").innerHTML=items.map(function(it){return '<button class="mrow'+(state.filter===it[0]?' active':'')+'" data-f="'+it[0]+'"><span class="swatch" style="background:'+it[1]+'"></span><span class="num">'+it[2]+'</span><span class="mlbl">'+it[3]+'</span></button>';}).join("");
+ let who=state.team==="all"?"":(state.direct?esc(state.team)+"&rsquo;s direct reports":esc(state.team)+"&rsquo;s team");
+ $("scopeText").innerHTML=state.team==="all"?"":("Viewing <b>"+who+"</b> · "+tot+(tot===1?" person":" people"));
+}
+
+function personRow(r,flat){
+ const m=SM[r.status];const pm=Math.round(r.done/r.total*100);
+ const modCls=r.done===r.total?"done":(r.done>=1?"p1":"");
+ const grade=r.grade!==null?(r.grade+"%"):'<span class="na">—</span>';
+ const F=[];F.push(fld("Email",esc(r.email)));F.push(fld("Manager",esc(r.manager)));
+ if(r.status==="Completed"){F.push(fld("Completed on",r.dateCompleted||na()));F.push(fld("On time",r.onTime?'<span class="ok">Yes</span>':'No'));F.push(fld("Final grade",grade+' <span class="ok">· Passed</span>'));}
+ else{F.push(fld("Modules",r.done+" of "+r.total));F.push(fld("Current grade",grade));F.push(fld("Last active",r.lastAccessed||na()));}
+ F.push(fld("Time spent",r.timeSpent||na()));F.push(fld("First accessed",r.firstAccessed||na()));
+ const mgr=(state.team==="all")?'<span class="person-mgr">'+esc(r.manager)+'</span>':'';
+ const stCls=flat?(' st-'+m.cls):'';
+ return '<div class="person'+stCls+'"><button class="person-head" aria-expanded="false">'+
+   '<span class="avatar">'+esc(initials(r.name))+'</span>'+
+   '<span class="pinfo"><span class="person-name">'+esc(r.name)+'</span>'+mgr+'</span>'+
+   '<span class="pill '+m.cls+'">'+lab(r.status)+'</span>'+
+   '<span class="modmini '+modCls+'"><span class="track"><span class="fill" style="width:'+pm+'%"></span></span><span class="lbl">'+r.done+' / '+r.total+'</span></span>'+
+   chev()+'</button><div class="detail"><div class="dgrid">'+F.join("")+'</div></div></div>';
+}
+
+function render(){
+ const sc=scoped();renderHero(sc);
+ const shown=sortR(sc.filter(matches));
+ $("countline").textContent="Showing "+shown.length+" of "+sc.length+" people"+(state.filter!=="all"?" · "+lab(state.filter).toLowerCase():"")+(state.q?" · matching “"+state.q+"”":"");
+ const list=$("list");
+ if(shown.length===0){list.innerHTML='<div class="empty"><b>No people match</b>Try clearing the search, switching the status filter, or choosing a different team.</div>';firstPaint=false;return;}
+ if(state.view==="list"){
+   list.innerHTML='<div class="flat">'+shown.map(function(r){return personRow(r,true);}).join("")+'</div>';
+ }else{
+   const order=["Completed","In Progress","Not Started"];let html="";
+   for(const st of order){const g=shown.filter(r=>r.status===st);if(!g.length)continue;const m=SM[st];
+     const share=Math.round(g.length/sc.length*100);const open=(state.filter!=="all"||state.q!==""||st==="Completed");
+     html+='<div class="group '+(open?'open':'')+'"><button class="group-head" aria-expanded="'+open+'">'+chev()+
+       '<span class="gbadge" style="background:'+m.badge+'"></span><span class="gtitle">'+lab(st)+'</span>'+
+       '<span class="gcount">'+g.length+' '+(g.length===1?'person':'people')+'</span>'+
+       '<span class="gmini"><span class="track"><span class="fill" style="width:'+share+'%;background:'+m.badge+'"></span></span><span class="share">'+share+'%</span></span></button>'+
+       '<div class="members">'+g.map(function(r){return personRow(r,false);}).join("")+'</div></div>';
+   }
+   list.innerHTML=html;
+ }
+ firstPaint=false;
+}
+
+$("list").addEventListener("click",function(e){
+ const gh=e.target.closest(".group-head");if(gh){const g=gh.closest(".group");const o=g.classList.toggle("open");gh.setAttribute("aria-expanded",o);return;}
+ const ph=e.target.closest(".person-head");if(ph){const p=ph.closest(".person");const o=p.classList.toggle("open");ph.setAttribute("aria-expanded",o);}
+});
+function setFilter(f){state.filter=f;document.querySelectorAll('.seg-ctl button[data-f]').forEach(function(b){b.setAttribute("aria-pressed",b.dataset.f===f);});render();}
+document.querySelectorAll('.seg-ctl button[data-f]').forEach(function(b){b.addEventListener("click",function(){setFilter(b.dataset.f);});});
+document.querySelectorAll('.seg-ctl button[data-v]').forEach(function(b){b.addEventListener("click",function(){state.view=b.dataset.v;document.querySelectorAll('.seg-ctl button[data-v]').forEach(function(x){x.setAttribute("aria-pressed",x.dataset.v===state.view);});render();});});
+$("momentum").addEventListener("click",function(e){const b=e.target.closest(".mrow");if(b)setFilter(state.filter===b.dataset.f?"all":b.dataset.f);});
+$("q").addEventListener("input",function(e){state.q=e.target.value.trim().toLowerCase();render();});
+$("sort").addEventListener("change",function(e){state.sort=e.target.value;render();});
+function syncTeam(){const on=state.team!=="all";$("directOnly").disabled=!on;$("directWrap").classList.toggle("off",!on);$("clearTeam").style.display=on?"":"none";}
+$("teamSel").addEventListener("change",function(e){state.team=e.target.value;if(state.team==="all"){state.direct=false;$("directOnly").checked=false;}syncTeam();render();});
+$("directOnly").addEventListener("change",function(e){state.direct=e.target.checked;render();});
+$("clearTeam").addEventListener("click",function(){state.team="all";state.direct=false;$("teamSel").value="all";$("directOnly").checked=false;syncTeam();render();});
+
+const ctl=$("controls");const sentinel=document.createElement("div");ctl.parentNode.insertBefore(sentinel,ctl);
+new IntersectionObserver(function(e){ctl.classList.toggle("stuck",!e[0].isIntersecting);},{threshold:1}).observe(sentinel);
+
+render();
+
+</script>
+</body>
+</html>
