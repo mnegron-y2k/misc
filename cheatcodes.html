@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Michael's Milking of the Casino</title>
+<style>
+:root {
+  --bg:#09070f; --panel:#15111f; --panel2:#1a1528; --line:#2b243b;
+  --text:#f7f5fb; --muted:#aaa1bb; --gold:#f5d06f; --green:#54e6ad;
+  --yellow:#f1c75b; --gray:#a7a0af; --pink:#e778ba;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#09070f,#100b19 60%,#09070f);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1260px;margin:0 auto;padding:20px}
+.hero{padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg,rgba(245,208,111,.12),rgba(231,120,186,.07),rgba(84,230,173,.05));}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:800}
+h1{font-size:34px;line-height:1.05;margin:7px 0 8px}
+.subtitle{color:var(--muted);max-width:780px;line-height:1.5}
+.section{margin-top:24px}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px}
+.section-title{font-size:18px;font-weight:800}
+.section-note{font-size:12px;color:var(--muted)}
+.action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pick{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:16px}
+.pick-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.game{font-size:12px;color:var(--muted)}
+.name{font-size:22px;font-weight:850;margin-top:3px}
+.odds{font-size:22px;font-weight:850;color:var(--gold)}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:850;letter-spacing:.04em}
+.BET{background:rgba(84,230,173,.13);border:1px solid rgba(84,230,173,.35);color:#7bf0bf}
+.LEAN{background:rgba(241,199,91,.13);border:1px solid rgba(241,199,91,.3);color:#f9d978}
+.PASS{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#c8c1ce}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:13px}
+.stat{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:9px}
+.stat .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat .v{font-size:15px;font-weight:800;margin-top:2px}
+.why{margin-top:13px;padding:12px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid var(--line);font-size:13px;line-height:1.5}
+.why strong{color:var(--gold)}
+.risk{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.4}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.summary .box{padding:13px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.summary .n{font-size:22px;font-weight:850}
+.summary .l{font-size:11px;color:var(--muted);margin-top:2px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+input,select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.table-shell{overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.055);text-align:left;white-space:nowrap;font-size:13px}
+th{position:sticky;top:0;background:#1b1528;color:#f8e7b2;cursor:pointer}
+td.reason{white-space:normal;min-width:320px;line-height:1.4;color:#d8d3df}
+details{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:0}
+summary{cursor:pointer;padding:15px 16px;font-weight:800;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"＋";float:right;color:var(--gold)}
+details[open] summary:after{content:"−"}
+.key-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 16px}
+.key{padding:11px;border-radius:13px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+.key .term{font-size:11px;color:var(--gold);font-weight:800;text-transform:uppercase}
+.key .desc{font-size:12px;color:var(--muted);line-height:1.4;margin-top:4px}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px}
+.footer{text-align:center;color:#766e83;font-size:11px;margin:24px 0 6px}
+@media(max-width:850px){
+  .action-grid,.summary,.key-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  h1{font-size:28px}
+  .wrap{padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="eyebrow">FTD Edge V3</div>
+    <h1>Michael's Milking of the Casino</h1>
+    <div class="subtitle">First-touchdown picks, stripped down to what matters: <strong>who we actually like, why we like them, and whether the price is worth betting.</strong></div>
+  </section>
+
+  <section class="section">
+    <div class="summary">
+      <div class="box"><div class="n">1</div><div class="l">Full BET</div></div>
+      <div class="box"><div class="n">4</div><div class="l">LEANs</div></div>
+      <div class="box"><div class="n">8</div><div class="l">PASSes</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">What we're actually betting</div>
+        <div class="section-note">BET first, then LEANs. These are the only plays worth considering at the listed prices.</div>
+      </div>
+    </div>
+    <div class="action-grid" id="actionGrid"></div>
+  </section>
+
+  <section class="section">
+    <details open>
+      <summary>How to read the board</summary>
+      <div class="key-grid">
+        <div class="key"><div class="term">Model P%</div><div class="desc">Estimated probability this player scores the first touchdown.</div></div>
+        <div class="key"><div class="term">Fair odds</div><div class="desc">What the odds would be if the model probability were priced perfectly.</div></div>
+        <div class="key"><div class="term">Book odds</div><div class="desc">The sportsbook price we're comparing against.</div></div>
+        <div class="key"><div class="term">Edge</div><div class="desc">Model probability minus sportsbook implied probability. Bigger positive = better.</div></div>
+        <div class="key"><div class="term">EV / $1</div><div class="desc">Estimated long-run profit per $1 if the model probability is correct.</div></div>
+        <div class="key"><div class="term">BET / LEAN / PASS</div><div class="desc">BET clears the strict threshold. LEAN is interesting but weaker. PASS means the price isn't good enough.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">All games</div>
+        <div class="section-note">Simple view first. Technical details stay available without taking over the page.</div>
+      </div>
+    </div>
+    <div class="controls">
+      <input id="search" placeholder="Search game or player…">
+      <select id="recFilter">
+        <option value="">All recommendations</option>
+        <option value="BET">BET</option>
+        <option value="LEAN">LEAN</option>
+        <option value="PASS">PASS</option>
+      </select>
+    </div>
+    <div class="table-shell">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="game">Game</th>
+            <th data-key="player">Model pick</th>
+            <th data-key="book">Odds</th>
+            <th data-key="bet">Call</th>
+            <th data-key="edge_pp">Edge</th>
+            <th>Why</th>
+          </tr>
+        </thead>
+        <tbody id="simpleBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <details>
+      <summary>Advanced model details</summary>
+      <div class="table-shell" style="border:0;border-top:1px solid var(--line);border-radius:0 0 18px 18px">
+        <table>
+          <thead><tr>
+            <th>Game</th><th>Pick</th><th>Model P%</th><th>Fair odds</th><th>Book odds</th><th>Book implied%</th><th>Edge</th><th>EV / $1</th><th>Confidence</th><th>Stake</th><th>Best value</th><th>Long shot</th>
+          </tr></thead>
+          <tbody id="advBody"></tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <div class="note">Only one full BET is intentional. V3 is still being validated, so the threshold for a full recommendation is deliberately stricter than the threshold for a LEAN.</div>
+  <div class="footer">Built for Michael — attempting to extract dairy products from the sportsbook economy.</div>
+</div>
+
+<script>
+const rows = [{"game": "ARI @ NYG", "player": "Cameron Skattebo", "prob": 21.0, "fair": 376, "book": 425, "confidence": "High", "best_value": "Jeremiyah Love +475", "longshot": "Isaiah Likely +1300", "bet": "LEAN", "stake": "0.10u", "edge_pp": 2.0, "ev": 0.103, "why": "Skattebo has the clearest early-touchdown role in this matchup, and +425 is modestly longer than the model\u2019s fair price. The edge is real, but not large enough for a full BET tag.", "risk": "The edge is only moderate, so small changes in role or game script can erase it.", "book_implied": 19.0}, {"game": "NE @ BUF", "player": "Josh Allen", "prob": 20.0, "fair": 400, "book": 425, "confidence": "Med-High", "best_value": "James Cook +475", "longshot": "Dalton Kincaid +875", "bet": "PASS", "stake": "0u", "edge_pp": 0.9, "ev": 0.05, "why": "Allen remains one of the likeliest individual scorers, but the current price is too close to the model\u2019s fair number to justify a wager.", "risk": "Good prediction candidate, weak betting edge.", "book_implied": 19.0}, {"game": "NYJ @ CHI", "player": "D'Andre Swift", "prob": 22.0, "fair": 355, "book": 390, "confidence": "Medium", "best_value": "Braelon Allen +625", "longshot": "Luther Burden III +1000", "bet": "PASS", "stake": "0u", "edge_pp": 1.6, "ev": 0.078, "why": "Swift is the model\u2019s most likely scorer, but Braelon Allen is the more interesting price after Breece Hall was ruled out.", "risk": "The listed most-likely pick is not the best betting value in this game.", "book_implied": 20.4}, {"game": "DAL @ HOU", "player": "David Montgomery", "prob": 18.5, "fair": 441, "book": 525, "confidence": "Medium", "best_value": "Nico Collins +825", "longshot": "Woody Marks +1100", "bet": "LEAN", "stake": "0.10u", "edge_pp": 2.5, "ev": 0.156, "why": "Montgomery\u2019s short-yardage and goal-line role gives him a cleaner first-TD path than his +525 price suggests. The model sees a useful pricing gap, but confidence is only medium.", "risk": "Touchdown chances can be split if Houston scores first or Dallas leans away from the run.", "book_implied": 16.0}, {"game": "LA @ PHI", "player": "Kyren Williams", "prob": 22.0, "fair": 355, "book": 390, "confidence": "Med-High", "best_value": "Dontayvion Wicks +1300", "longshot": "Tyler Higbee +1500", "bet": "PASS", "stake": "0u", "edge_pp": 1.6, "ev": 0.078, "why": "Kyren is the most likely scorer, but the more interesting market signal is Wicks after Philadelphia\u2019s pass-catcher injuries.", "risk": "The favorite is correctly priced; the value lies elsewhere in the matchup.", "book_implied": 20.4}, {"game": "GB @ TB", "player": "Christian Watson", "prob": 15.0, "fair": 567, "book": 725, "confidence": "Medium", "best_value": "Christian Watson +725", "longshot": "Tucker Kraft +1100", "bet": "LEAN", "stake": "0.10u", "edge_pp": 2.9, "ev": 0.238, "why": "Tampa\u2019s backup-QB situation lowers the Buccaneers\u2019 chance to strike first, while Watson offers explosive and red-zone upside at a price meaningfully longer than the model\u2019s fair line.", "risk": "Receiver touchdowns are inherently volatile, and Watson\u2019s role is less concentrated than a goal-line back\u2019s.", "book_implied": 12.1}, {"game": "TEN @ BAL", "player": "Derrick Henry", "prob": 30.0, "fair": 233, "book": 270, "confidence": "High", "best_value": "Mark Andrews +825", "longshot": "Rashod Bateman +1250", "bet": "LEAN", "stake": "0.10u", "edge_pp": 3.0, "ev": 0.11, "why": "Henry has the strongest combination of team-first-TD probability and concentrated goal-line usage on the slate. The price is only slightly better than fair, so it stays a LEAN rather than a full BET.", "risk": "Short odds leave little margin for error even when the player is highly likely.", "book_implied": 27.0}, {"game": "JAX @ CIN", "player": "Chase Brown", "prob": 18.5, "fair": 441, "book": 500, "confidence": "Med-High", "best_value": "Ja'Marr Chase +775", "longshot": "Brenton Strange +1450", "bet": "PASS", "stake": "0u", "edge_pp": 1.8, "ev": 0.11, "why": "Brown is a reasonable first-TD candidate, but the model edge does not clear the stricter betting threshold.", "risk": "Positive expected value estimate is too small to trust without historical validation.", "book_implied": 16.7}, {"game": "MIA @ MIN", "player": "Aaron Jones", "prob": 27.0, "fair": 270, "book": 300, "confidence": "High", "best_value": "T.J. Hockenson +850", "longshot": "Jauan Jennings +1150", "bet": "PASS", "stake": "0u", "edge_pp": 2.0, "ev": 0.08, "why": "Jones is one of the slate\u2019s likeliest scorers, but +300 is not enough of a discount versus the model\u2019s fair price.", "risk": "Strong prediction does not automatically mean strong wager.", "book_implied": 25.0}, {"game": "KC @ LV", "player": "Kenneth Walker III", "prob": 23.0, "fair": 335, "book": 350, "confidence": "Med-High", "best_value": "Rashee Rice +850", "longshot": "Xavier Worthy +1300", "bet": "PASS", "stake": "0u", "edge_pp": 0.8, "ev": 0.035, "why": "Walker is a plausible first scorer, but the book is pricing him almost exactly where the model does.", "risk": "Very little price edge.", "book_implied": 22.2}, {"game": "LAC @ SEA", "player": "Emanuel Wilson", "prob": 20.0, "fair": 400, "book": 550, "confidence": "High", "best_value": "Emanuel Wilson +550", "longshot": "AJ Barner +1100", "bet": "BET", "stake": "0.50u", "edge_pp": 4.6, "ev": 0.3, "why": "Seattle\u2019s backfield injuries create the clearest role-expansion spot on the slate. Wilson\u2019s path to carries and goal-line work is materially larger than his normal season profile, yet the book is still offering +550 versus a model fair price near +400.", "risk": "The role projection is injury-driven, so any unexpected committee usage would weaken the edge.", "book_implied": 15.4}, {"game": "DEN @ SF", "player": "Christian McCaffrey", "prob": 21.0, "fair": 376, "book": 400, "confidence": "Med-High", "best_value": "George Kittle +900", "longshot": "Jaylen Waddle +1100", "bet": "PASS", "stake": "0u", "edge_pp": 1.0, "ev": 0.05, "why": "McCaffrey is naturally one of the game\u2019s most likely scorers, but +400 is too close to fair value.", "risk": "The price already captures most of his touchdown equity.", "book_implied": 20.0}, {"game": "DET @ CAR", "player": "Jahmyr Gibbs", "prob": 31.0, "fair": 223, "book": 240, "confidence": "High", "best_value": "Amon-Ra St. Brown +625", "longshot": "Sam LaPorta +1100", "bet": "PASS", "stake": "0u", "edge_pp": 1.6, "ev": 0.054, "why": "Gibbs is the highest raw-probability scorer on the slate, but the sportsbook price is efficient enough that the model does not recommend betting it.", "risk": "High probability, low pricing edge.", "book_implied": 29.4}];
+const actionable = [{"game": "LAC @ SEA", "player": "Emanuel Wilson", "prob": 20.0, "fair": 400, "book": 550, "confidence": "High", "best_value": "Emanuel Wilson +550", "longshot": "AJ Barner +1100", "bet": "BET", "stake": "0.50u", "edge_pp": 4.6, "ev": 0.3, "why": "Seattle\u2019s backfield injuries create the clearest role-expansion spot on the slate. Wilson\u2019s path to carries and goal-line work is materially larger than his normal season profile, yet the book is still offering +550 versus a model fair price near +400.", "risk": "The role projection is injury-driven, so any unexpected committee usage would weaken the edge.", "book_implied": 15.4}, {"game": "GB @ TB", "player": "Christian Watson", "prob": 15.0, "fair": 567, "book": 725, "confidence": "Medium", "best_value": "Christian Watson +725", "longshot": "Tucker Kraft +1100", "bet": "LEAN", "stake": "0.10u", "edge_pp": 2.9, "ev": 0.238, "why": "Tampa\u2019s backup-QB situation lowers the Buccaneers\u2019 chance to strike first, while Watson offers explosive and red-zone upside at a price meaningfully longer than the model\u2019s fair line.", "risk": "Receiver touchdowns are inherently volatile, and Watson\u2019s role is less concentrated than a goal-line back\u2019s.", "book_implied": 12.1}, {"game": "DAL @ HOU", "player": "David Montgomery", "prob": 18.5, "fair": 441, "book": 525, "confidence": "Medium", "best_value": "Nico Collins +825", "longshot": "Woody Marks +1100", "bet": "LEAN", "stake": "0.10u", "edge_pp": 2.5, "ev": 0.156, "why": "Montgomery\u2019s short-yardage and goal-line role gives him a cleaner first-TD path than his +525 price suggests. The model sees a useful pricing gap, but confidence is only medium.", "risk": "Touchdown chances can be split if Houston scores first or Dallas leans away from the run.", "book_implied": 16.0}, {"game": "TEN @ BAL", "player": "Derrick Henry", "prob": 30.0, "fair": 233, "book": 270, "confidence": "High", "best_value": "Mark Andrews +825", "longshot": "Rashod Bateman +1250", "bet": "LEAN", "stake": "0.10u", "edge_pp": 3.0, "ev": 0.11, "why": "Henry has the strongest combination of team-first-TD probability and concentrated goal-line usage on the slate. The price is only slightly better than fair, so it stays a LEAN rather than a full BET.", "risk": "Short odds leave little margin for error even when the player is highly likely.", "book_implied": 27.0}, {"game": "ARI @ NYG", "player": "Cameron Skattebo", "prob": 21.0, "fair": 376, "book": 425, "confidence": "High", "best_value": "Jeremiyah Love +475", "longshot": "Isaiah Likely +1300", "bet": "LEAN", "stake": "0.10u", "edge_pp": 2.0, "ev": 0.103, "why": "Skattebo has the clearest early-touchdown role in this matchup, and +425 is modestly longer than the model\u2019s fair price. The edge is real, but not large enough for a full BET tag.", "risk": "The edge is only moderate, so small changes in role or game script can erase it.", "book_implied": 19.0}];
+let filtered = [...rows];
+let sortKey = "edge_pp";
+let sortDir = -1;
+
+function money(v) { return "+" + v; }
+
+function renderActions() {
+  const el = document.getElementById("actionGrid");
+  el.innerHTML = "";
+  actionable.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "pick";
+    card.innerHTML = `
+      <div class="pick-top">
+        <div>
+          <div class="game">${r.game}</div>
+          <div class="name">${r.player}</div>
+          <div style="margin-top:7px"><span class="badge ${r.bet}">${r.bet}</span> <span style="color:var(--muted);font-size:12px;margin-left:6px">Stake: ${r.stake}</span></div>
+        </div>
+        <div class="odds">${money(r.book)}</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">Model P</div><div class="v">${r.prob.toFixed(1)}%</div></div>
+        <div class="stat"><div class="k">Fair odds</div><div class="v">${money(r.fair)}</div></div>
+        <div class="stat"><div class="k">Edge</div><div class="v">+${r.edge_pp.toFixed(1)} pp</div></div>
+        <div class="stat"><div class="k">Confidence</div><div class="v">${r.confidence}</div></div>
+      </div>
+      <div class="why"><strong>Why:</strong> ${r.why}</div>
+      <div class="risk"><strong>What could go wrong:</strong> ${r.risk}</div>
+    `;
+    el.appendChild(card);
+  });
+}
+
+function renderTables() {
+  const simple = document.getElementById("simpleBody");
+  const adv = document.getElementById("advBody");
+  simple.innerHTML = "";
+  adv.innerHTML = "";
+  filtered.forEach(r => {
+    let tr = document.createElement("tr");
+    tr.innerHTML = `<td>${r.game}</td><td><strong>${r.player}</strong></td><td>${money(r.book)}</td><td><span class="badge ${r.bet}">${r.bet}</span></td><td>+${r.edge_pp.toFixed(1)} pp</td><td class="reason">${r.why}</td>`;
+    simple.appendChild(tr);
+
+    let tr2 = document.createElement("tr");
+    tr2.innerHTML = `<td>${r.game}</td><td>${r.player}</td><td>${r.prob.toFixed(1)}%</td><td>${money(r.fair)}</td><td>${money(r.book)}</td><td>${r.book_implied.toFixed(1)}%</td><td>+${r.edge_pp.toFixed(1)} pp</td><td>+${r.ev.toFixed(3)}</td><td>${r.confidence}</td><td>${r.stake}</td><td>${r.best_value}</td><td>${r.longshot}</td>`;
+    adv.appendChild(tr2);
+  });
+}
+
+function apply() {
+  const q = document.getElementById("search").value.toLowerCase().trim();
+  const rec = document.getElementById("recFilter").value;
+  filtered = rows.filter(r => (!q || `${r.game} ${r.player}`.toLowerCase().includes(q)) && (!rec || r.bet===rec));
+  filtered.sort((a,b)=> {
+    const av=a[sortKey], bv=b[sortKey];
+    if(typeof av === "string") return av.localeCompare(bv)*sortDir;
+    return (av-bv)*sortDir;
+  });
+  renderTables();
+}
+
+document.querySelectorAll("th[data-key]").forEach(th => {
+  th.addEventListener("click", () => {
+    const k=th.dataset.key;
+    if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=(["game","player","bet"].includes(k)?1:-1); }
+    apply();
+  });
+});
+document.getElementById("search").addEventListener("input", apply);
+document.getElementById("recFilter").addEventListener("change", apply);
+
+renderActions();
+apply();
+</script>
+</body>
+</html>
